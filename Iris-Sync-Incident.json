@@ -71,27 +71,16 @@
                     "body": {
                         "alert_title": "@{triggerBody()?['object']?['properties']?['title']}",
                         "alert_description": "@{triggerBody()?['object']?['properties']?['description']}",
-                        "alert_source": "Test Source",
+                        "alert_source": "Microsoft Sentinel",
                         "alert_source_ref": "@{triggerBody()?['object']?['properties']?['incidentNumber']}",
                         "alert_source_link": "@{triggerBody()?['object']?['properties']?['incidentUrl']}",
                         "alert_source_content": {
-                            "_id": "603f704aaf7417985bbf3b22",
-                            "contextId": "206e2965-6533-48a6-ba9e-794364a84bf9",
-                            "description": "Contoso user performed 11 suspicious activities MITRE Technique used Account Discovery (T1087) and subtechnique used Domain Account (T1087.002)",
-                            "entities": [
-                                {
-                                    "entityRole": "Source",
-                                    "entityType": 2,
-                                    "id": "6204bdaf-ad46-4e99-a25d-374a0532c666",
-                                    "inst": 0,
-                                    "label": "user1",
-                                    "pa": "user1@contoso.com",
-                                    "saas": 11161,
-                                    "type": "account"
-                                }
-                            ],
-                            "title": "Honeytoken activity",
-                            "URL": "https://contoso.portal.cloudappsecurity.com/#/alerts/603f704aaf7417985bbf3b22"
+                            "_id": "",
+                            "contextId": "",
+                            "description": "",
+                            "entities": [],
+                            "title": "",
+                            "URL": ""
                         },
                         "alert_severity_id": 4,
                         "alert_status_id": 3,
@@ -101,32 +90,10 @@
                         "alert_source_event_time": "@{triggerBody()?['object']?['properties']?['createdTimeUtc']}",
                         "alert_note": "@{triggerBody()?['object']?['id']}",
                         "alert_tags": "defender,anothertag",
-                        "alert_iocs": [
-                            {
-                                "ioc_value": "tarzan5",
-                                "ioc_description": "description of Tarzan",
-                                "ioc_tlp_id": 1,
-                                "ioc_type_id": 2,
-                                "ioc_tags": "tag1,tag2",
-                                "ioc_enrichment": {
-                                    "provider_1": {
-                                        "data": 2,
-                                        "new_data": 3
-                                    }
-                                }
-                            }
-                        ],
-                        "alert_assets": [
-                            {
-                                "asset_name": "My super asset",
-                                "asset_description": "Asset description",
-                                "asset_type_id": 1,
-                                "asset_ip": "1.1.1.1",
-                                "asset_tags": "tag1,tag2"
-                            }
-                        ],
+                        "alert_iocs": [],
+                        "alert_assets": [],
                         "alert_customer_id": 1,
-                        "alert_classification_id": 1
+                        "alert_classification_id": 2
                     },
                     "authentication": {
                         "type": "Raw",
