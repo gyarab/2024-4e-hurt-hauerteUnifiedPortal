@@ -881,44 +881,32 @@
                     }
                 }
             },
-            "For_each_1": {
-                "foreach": "@outputs('Parse_JSON')?['body']?['data']?['assets']",
-                "actions": {
-                    "For_each": {
-                        "foreach": "@item()?['alerts']",
-                        "actions": {
-                            "Update_incident": {
-                                "type": "ApiConnection",
-                                "inputs": {
-                                    "host": {
-                                        "connection": {
-                                            "name": "@parameters('$connections')['azuresentinel-1']['connectionId']"
-                                        }
-                                    },
-                                    "method": "put",
-                                    "body": {
-                                        "incidentArmId": "@triggerBody()?['object']?['id']",
-                                        "tagsToAdd": {
-                                            "TagsToAdd": [
-                                                {
-                                                    "Tag": "@concat('alert_id:', item()?['alert_id'])"
-                                                }
-                                            ]
-                                        }
-                                    },
-                                    "path": "/Incidents"
-                                }
-                            }
-                        },
-                        "type": "Foreach"
-                    }
-                },
+            "Update_incident": {
                 "runAfter": {
                     "Parse_JSON": [
                         "Succeeded"
                     ]
                 },
-                "type": "Foreach"
+                "type": "ApiConnection",
+                "inputs": {
+                    "host": {
+                        "connection": {
+                            "name": "@parameters('$connections')['azuresentinel-1']['connectionId']"
+                        }
+                    },
+                    "method": "put",
+                    "body": {
+                        "incidentArmId": "@triggerBody()?['object']?['id']",
+                        "tagsToAdd": {
+                            "TagsToAdd": [
+                                {
+                                    "Tag": "@{concat('SOC-', body('Parse_JSON')?['data']?['alert_id'])\n}"
+                                }
+                            ]
+                        }
+                    },
+                    "path": "/Incidents"
+                }
             }
         },
         "outputs": {},
