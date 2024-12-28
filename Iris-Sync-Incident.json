@@ -1,0 +1,948 @@
+{
+    "definition": {
+        "$schema": "https://schema.management.azure.com/providers/Microsoft.Logic/schemas/2016-06-01/workflowdefinition.json#",
+        "contentVersion": "1.0.0.0",
+        "triggers": {
+            "Microsoft_Sentinel_incident": {
+                "type": "ApiConnectionWebhook",
+                "inputs": {
+                    "host": {
+                        "connection": {
+                            "name": "@parameters('$connections')['azuresentinel-1']['connectionId']"
+                        }
+                    },
+                    "body": {
+                        "callback_url": "@listCallbackUrl()"
+                    },
+                    "path": "/incident-creation"
+                }
+            }
+        },
+        "actions": {
+            "HTTP": {
+                "runAfter": {},
+                "type": "Http",
+                "inputs": {
+                    "uri": "http://20.0.136.242:8000/api/ping",
+                    "method": "GET",
+                    "authentication": {
+                        "type": "Raw",
+                        "value": "Bearer 0cEhjj1JIPmmC_abj3-On2TvQT_YtfflpQWpp_UcY_GMtkDDl-WmrLSW2QCvtOOQafaiGBFurQ3bQT26QZstBQ"
+                    }
+                },
+                "runtimeConfiguration": {
+                    "contentTransfer": {
+                        "transferMode": "Chunked"
+                    }
+                }
+            },
+            "HTTP_1": {
+                "runAfter": {},
+                "type": "Http",
+                "inputs": {
+                    "uri": "http://20.0.136.242:8000/case/ioc/add",
+                    "method": "POST",
+                    "body": {
+                        "ioc_type_id": 1,
+                        "ioc_tlp_id": 2,
+                        "ioc_value": "8.8.8.14",
+                        "ioc_description": "@{triggerBody()?['object']?['properties']?['title']}",
+                        "ioc_tags": "",
+                        "custom_attributes": {},
+                        "cid": 1
+                    },
+                    "authentication": {
+                        "type": "Raw",
+                        "value": "Bearer 0cEhjj1JIPmmC_abj3-On2TvQT_YtfflpQWpp_UcY_GMtkDDl-WmrLSW2QCvtOOQafaiGBFurQ3bQT26QZstBQ"
+                    }
+                },
+                "runtimeConfiguration": {
+                    "contentTransfer": {
+                        "transferMode": "Chunked"
+                    }
+                }
+            },
+            "HTTP_2": {
+                "runAfter": {},
+                "type": "Http",
+                "inputs": {
+                    "uri": "http://20.0.136.242:8000/alerts/add",
+                    "method": "POST",
+                    "body": {
+                        "alert_title": "@{triggerBody()?['object']?['properties']?['title']}",
+                        "alert_description": "@{triggerBody()?['object']?['properties']?['description']}",
+                        "alert_source": "Test Source",
+                        "alert_source_ref": "@{triggerBody()?['object']?['properties']?['incidentNumber']}",
+                        "alert_source_link": "@{triggerBody()?['object']?['properties']?['incidentUrl']}",
+                        "alert_source_content": {
+                            "_id": "603f704aaf7417985bbf3b22",
+                            "contextId": "206e2965-6533-48a6-ba9e-794364a84bf9",
+                            "description": "Contoso user performed 11 suspicious activities MITRE Technique used Account Discovery (T1087) and subtechnique used Domain Account (T1087.002)",
+                            "entities": [
+                                {
+                                    "entityRole": "Source",
+                                    "entityType": 2,
+                                    "id": "6204bdaf-ad46-4e99-a25d-374a0532c666",
+                                    "inst": 0,
+                                    "label": "user1",
+                                    "pa": "user1@contoso.com",
+                                    "saas": 11161,
+                                    "type": "account"
+                                }
+                            ],
+                            "title": "Honeytoken activity",
+                            "URL": "https://contoso.portal.cloudappsecurity.com/#/alerts/603f704aaf7417985bbf3b22"
+                        },
+                        "alert_severity_id": 4,
+                        "alert_status_id": 3,
+                        "alert_context": {
+                            "context_key": "context_value"
+                        },
+                        "alert_source_event_time": "@{triggerBody()?['object']?['properties']?['createdTimeUtc']}",
+                        "alert_note": "@{triggerBody()?['object']?['id']}",
+                        "alert_tags": "defender,anothertag",
+                        "alert_iocs": [
+                            {
+                                "ioc_value": "tarzan5",
+                                "ioc_description": "description of Tarzan",
+                                "ioc_tlp_id": 1,
+                                "ioc_type_id": 2,
+                                "ioc_tags": "tag1,tag2",
+                                "ioc_enrichment": {
+                                    "provider_1": {
+                                        "data": 2,
+                                        "new_data": 3
+                                    }
+                                }
+                            }
+                        ],
+                        "alert_assets": [
+                            {
+                                "asset_name": "My super asset",
+                                "asset_description": "Asset description",
+                                "asset_type_id": 1,
+                                "asset_ip": "1.1.1.1",
+                                "asset_tags": "tag1,tag2"
+                            }
+                        ],
+                        "alert_customer_id": 1,
+                        "alert_classification_id": 1
+                    },
+                    "authentication": {
+                        "type": "Raw",
+                        "value": "Bearer 0cEhjj1JIPmmC_abj3-On2TvQT_YtfflpQWpp_UcY_GMtkDDl-WmrLSW2QCvtOOQafaiGBFurQ3bQT26QZstBQ"
+                    }
+                },
+                "runtimeConfiguration": {
+                    "contentTransfer": {
+                        "transferMode": "Chunked"
+                    }
+                }
+            },
+            "Parse_JSON": {
+                "runAfter": {
+                    "HTTP_2": [
+                        "Succeeded"
+                    ]
+                },
+                "type": "ParseJson",
+                "inputs": {
+                    "content": "@body('HTTP_2')",
+                    "schema": {
+                        "type": "object",
+                        "properties": {
+                            "status": {
+                                "type": "string"
+                            },
+                            "message": {
+                                "type": "string"
+                            },
+                            "data": {
+                                "type": "object",
+                                "properties": {
+                                    "severity": {
+                                        "type": "object",
+                                        "properties": {
+                                            "severity_id": {
+                                                "type": "integer"
+                                            },
+                                            "severity_name": {
+                                                "type": "string"
+                                            },
+                                            "severity_description": {
+                                                "type": "string"
+                                            }
+                                        }
+                                    },
+                                    "status": {
+                                        "type": "object",
+                                        "properties": {
+                                            "status_id": {
+                                                "type": "integer"
+                                            },
+                                            "status_name": {
+                                                "type": "string"
+                                            },
+                                            "status_description": {
+                                                "type": "string"
+                                            }
+                                        }
+                                    },
+                                    "customer": {
+                                        "type": "object",
+                                        "properties": {
+                                            "customer_name": {
+                                                "type": "string"
+                                            },
+                                            "customer_description": {},
+                                            "customer_sla": {},
+                                            "customer_id": {
+                                                "type": "integer"
+                                            },
+                                            "client_uuid": {
+                                                "type": "string"
+                                            },
+                                            "creation_date": {
+                                                "type": "string"
+                                            },
+                                            "last_update_date": {
+                                                "type": "string"
+                                            },
+                                            "custom_attributes": {}
+                                        }
+                                    },
+                                    "classification": {
+                                        "type": "object",
+                                        "properties": {
+                                            "name": {
+                                                "type": "string"
+                                            },
+                                            "name_expanded": {
+                                                "type": "string"
+                                            },
+                                            "description": {
+                                                "type": "string"
+                                            },
+                                            "id": {
+                                                "type": "integer"
+                                            },
+                                            "creation_date": {
+                                                "type": "string"
+                                            }
+                                        }
+                                    },
+                                    "owner": {},
+                                    "iocs": {
+                                        "type": "array",
+                                        "items": {
+                                            "type": "object",
+                                            "properties": {
+                                                "ioc_value": {
+                                                    "type": "string"
+                                                },
+                                                "ioc_enrichment": {
+                                                    "type": "object",
+                                                    "properties": {
+                                                        "provider_1": {
+                                                            "type": "object",
+                                                            "properties": {
+                                                                "data": {
+                                                                    "type": "integer"
+                                                                },
+                                                                "new_data": {
+                                                                    "type": "integer"
+                                                                }
+                                                            }
+                                                        }
+                                                    }
+                                                },
+                                                "ioc_type": {
+                                                    "type": "object",
+                                                    "properties": {
+                                                        "type_name": {
+                                                            "type": "string"
+                                                        },
+                                                        "type_description": {
+                                                            "type": "string"
+                                                        },
+                                                        "type_taxonomy": {},
+                                                        "type_validation_regex": {},
+                                                        "type_validation_expect": {},
+                                                        "type_id": {
+                                                            "type": "integer"
+                                                        }
+                                                    }
+                                                },
+                                                "ioc_id": {
+                                                    "type": "integer"
+                                                },
+                                                "ioc_uuid": {
+                                                    "type": "string"
+                                                },
+                                                "ioc_type_id": {
+                                                    "type": "integer"
+                                                },
+                                                "ioc_description": {
+                                                    "type": "string"
+                                                },
+                                                "ioc_tags": {
+                                                    "type": "string"
+                                                },
+                                                "user_id": {},
+                                                "ioc_misp": {},
+                                                "ioc_tlp_id": {
+                                                    "type": "integer"
+                                                },
+                                                "custom_attributes": {},
+                                                "modification_history": {}
+                                            },
+                                            "required": [
+                                                "ioc_value",
+                                                "ioc_enrichment",
+                                                "ioc_type",
+                                                "ioc_id",
+                                                "ioc_uuid",
+                                                "ioc_type_id",
+                                                "ioc_description",
+                                                "ioc_tags",
+                                                "user_id",
+                                                "ioc_misp",
+                                                "ioc_tlp_id",
+                                                "custom_attributes",
+                                                "modification_history"
+                                            ]
+                                        }
+                                    },
+                                    "assets": {
+                                        "type": "array",
+                                        "items": {
+                                            "type": "object",
+                                            "properties": {
+                                                "asset_name": {
+                                                    "type": "string"
+                                                },
+                                                "asset_enrichment": {},
+                                                "asset_type": {
+                                                    "type": "object",
+                                                    "properties": {
+                                                        "asset_name": {
+                                                            "type": "string"
+                                                        },
+                                                        "asset_description": {
+                                                            "type": "string"
+                                                        },
+                                                        "asset_icon_compromised": {
+                                                            "type": "string"
+                                                        },
+                                                        "asset_icon_not_compromised": {
+                                                            "type": "string"
+                                                        },
+                                                        "asset_id": {
+                                                            "type": "integer"
+                                                        }
+                                                    }
+                                                },
+                                                "alerts": {
+                                                    "type": "array",
+                                                    "items": {
+                                                        "type": "object",
+                                                        "properties": {
+                                                            "severity": {
+                                                                "type": "object",
+                                                                "properties": {
+                                                                    "severity_id": {
+                                                                        "type": "integer"
+                                                                    },
+                                                                    "severity_name": {
+                                                                        "type": "string"
+                                                                    },
+                                                                    "severity_description": {
+                                                                        "type": "string"
+                                                                    }
+                                                                }
+                                                            },
+                                                            "status": {
+                                                                "type": "object",
+                                                                "properties": {
+                                                                    "status_id": {
+                                                                        "type": "integer"
+                                                                    },
+                                                                    "status_name": {
+                                                                        "type": "string"
+                                                                    },
+                                                                    "status_description": {
+                                                                        "type": "string"
+                                                                    }
+                                                                }
+                                                            },
+                                                            "customer": {
+                                                                "type": "object",
+                                                                "properties": {
+                                                                    "customer_name": {
+                                                                        "type": "string"
+                                                                    },
+                                                                    "customer_description": {},
+                                                                    "customer_sla": {},
+                                                                    "customer_id": {
+                                                                        "type": "integer"
+                                                                    },
+                                                                    "client_uuid": {
+                                                                        "type": "string"
+                                                                    },
+                                                                    "creation_date": {
+                                                                        "type": "string"
+                                                                    },
+                                                                    "last_update_date": {
+                                                                        "type": "string"
+                                                                    },
+                                                                    "custom_attributes": {}
+                                                                }
+                                                            },
+                                                            "classification": {
+                                                                "type": "object",
+                                                                "properties": {
+                                                                    "name": {
+                                                                        "type": "string"
+                                                                    },
+                                                                    "name_expanded": {
+                                                                        "type": "string"
+                                                                    },
+                                                                    "description": {
+                                                                        "type": "string"
+                                                                    },
+                                                                    "id": {
+                                                                        "type": "integer"
+                                                                    },
+                                                                    "creation_date": {
+                                                                        "type": "string"
+                                                                    }
+                                                                }
+                                                            },
+                                                            "owner": {},
+                                                            "iocs": {
+                                                                "type": "array",
+                                                                "items": {
+                                                                    "type": "object",
+                                                                    "properties": {
+                                                                        "ioc_value": {
+                                                                            "type": "string"
+                                                                        },
+                                                                        "ioc_enrichment": {
+                                                                            "type": "object",
+                                                                            "properties": {
+                                                                                "provider_1": {
+                                                                                    "type": "object",
+                                                                                    "properties": {
+                                                                                        "data": {
+                                                                                            "type": "integer"
+                                                                                        },
+                                                                                        "new_data": {
+                                                                                            "type": "integer"
+                                                                                        }
+                                                                                    }
+                                                                                }
+                                                                            }
+                                                                        },
+                                                                        "ioc_type": {
+                                                                            "type": "object",
+                                                                            "properties": {
+                                                                                "type_name": {
+                                                                                    "type": "string"
+                                                                                },
+                                                                                "type_description": {
+                                                                                    "type": "string"
+                                                                                },
+                                                                                "type_taxonomy": {},
+                                                                                "type_validation_regex": {},
+                                                                                "type_validation_expect": {},
+                                                                                "type_id": {
+                                                                                    "type": "integer"
+                                                                                }
+                                                                            }
+                                                                        },
+                                                                        "ioc_id": {
+                                                                            "type": "integer"
+                                                                        },
+                                                                        "ioc_uuid": {
+                                                                            "type": "string"
+                                                                        },
+                                                                        "ioc_type_id": {
+                                                                            "type": "integer"
+                                                                        },
+                                                                        "ioc_description": {
+                                                                            "type": "string"
+                                                                        },
+                                                                        "ioc_tags": {
+                                                                            "type": "string"
+                                                                        },
+                                                                        "user_id": {},
+                                                                        "ioc_misp": {},
+                                                                        "ioc_tlp_id": {
+                                                                            "type": "integer"
+                                                                        },
+                                                                        "custom_attributes": {},
+                                                                        "modification_history": {}
+                                                                    },
+                                                                    "required": [
+                                                                        "ioc_value",
+                                                                        "ioc_enrichment",
+                                                                        "ioc_type",
+                                                                        "ioc_id",
+                                                                        "ioc_uuid",
+                                                                        "ioc_type_id",
+                                                                        "ioc_description",
+                                                                        "ioc_tags",
+                                                                        "user_id",
+                                                                        "ioc_misp",
+                                                                        "ioc_tlp_id",
+                                                                        "custom_attributes",
+                                                                        "modification_history"
+                                                                    ]
+                                                                }
+                                                            },
+                                                            "resolution_status": {},
+                                                            "cases": {
+                                                                "type": "array"
+                                                            },
+                                                            "comments": {
+                                                                "type": "array"
+                                                            },
+                                                            "alert_id": {
+                                                                "type": "integer"
+                                                            },
+                                                            "alert_uuid": {
+                                                                "type": "string"
+                                                            },
+                                                            "alert_title": {
+                                                                "type": "string"
+                                                            },
+                                                            "alert_description": {
+                                                                "type": "string"
+                                                            },
+                                                            "alert_source": {
+                                                                "type": "string"
+                                                            },
+                                                            "alert_source_ref": {
+                                                                "type": "string"
+                                                            },
+                                                            "alert_source_link": {
+                                                                "type": "string"
+                                                            },
+                                                            "alert_source_content": {
+                                                                "type": "object",
+                                                                "properties": {
+                                                                    "_id": {
+                                                                        "type": "string"
+                                                                    },
+                                                                    "contextId": {
+                                                                        "type": "string"
+                                                                    },
+                                                                    "description": {
+                                                                        "type": "string"
+                                                                    },
+                                                                    "entities": {
+                                                                        "type": "array",
+                                                                        "items": {
+                                                                            "type": "object",
+                                                                            "properties": {
+                                                                                "entityRole": {
+                                                                                    "type": "string"
+                                                                                },
+                                                                                "entityType": {
+                                                                                    "type": "integer"
+                                                                                },
+                                                                                "id": {
+                                                                                    "type": "string"
+                                                                                },
+                                                                                "inst": {
+                                                                                    "type": "integer"
+                                                                                },
+                                                                                "label": {
+                                                                                    "type": "string"
+                                                                                },
+                                                                                "pa": {
+                                                                                    "type": "string"
+                                                                                },
+                                                                                "saas": {
+                                                                                    "type": "integer"
+                                                                                },
+                                                                                "type": {
+                                                                                    "type": "string"
+                                                                                }
+                                                                            },
+                                                                            "required": [
+                                                                                "entityRole",
+                                                                                "entityType",
+                                                                                "id",
+                                                                                "inst",
+                                                                                "label",
+                                                                                "pa",
+                                                                                "saas",
+                                                                                "type"
+                                                                            ]
+                                                                        }
+                                                                    },
+                                                                    "title": {
+                                                                        "type": "string"
+                                                                    },
+                                                                    "URL": {
+                                                                        "type": "string"
+                                                                    }
+                                                                }
+                                                            },
+                                                            "alert_severity_id": {
+                                                                "type": "integer"
+                                                            },
+                                                            "alert_status_id": {
+                                                                "type": "integer"
+                                                            },
+                                                            "alert_context": {
+                                                                "type": "object",
+                                                                "properties": {
+                                                                    "context_key": {
+                                                                        "type": "string"
+                                                                    }
+                                                                }
+                                                            },
+                                                            "alert_source_event_time": {
+                                                                "type": "string"
+                                                            },
+                                                            "alert_creation_time": {
+                                                                "type": "string"
+                                                            },
+                                                            "alert_note": {
+                                                                "type": "string"
+                                                            },
+                                                            "alert_tags": {
+                                                                "type": "string"
+                                                            },
+                                                            "alert_owner_id": {},
+                                                            "modification_history": {
+                                                                "type": "object",
+                                                                "properties": {
+                                                                    "1735234559.122843": {
+                                                                        "type": "object",
+                                                                        "properties": {
+                                                                            "user": {
+                                                                                "type": "string"
+                                                                            },
+                                                                            "user_id": {
+                                                                                "type": "integer"
+                                                                            },
+                                                                            "action": {
+                                                                                "type": "string"
+                                                                            }
+                                                                        }
+                                                                    }
+                                                                }
+                                                            },
+                                                            "alert_customer_id": {
+                                                                "type": "integer"
+                                                            },
+                                                            "alert_classification_id": {
+                                                                "type": "integer"
+                                                            },
+                                                            "alert_resolution_status_id": {}
+                                                        },
+                                                        "required": [
+                                                            "severity",
+                                                            "status",
+                                                            "customer",
+                                                            "classification",
+                                                            "owner",
+                                                            "iocs",
+                                                            "resolution_status",
+                                                            "cases",
+                                                            "comments",
+                                                            "alert_id",
+                                                            "alert_uuid",
+                                                            "alert_title",
+                                                            "alert_description",
+                                                            "alert_source",
+                                                            "alert_source_ref",
+                                                            "alert_source_link",
+                                                            "alert_source_content",
+                                                            "alert_severity_id",
+                                                            "alert_status_id",
+                                                            "alert_context",
+                                                            "alert_source_event_time",
+                                                            "alert_creation_time",
+                                                            "alert_note",
+                                                            "alert_tags",
+                                                            "alert_owner_id",
+                                                            "modification_history",
+                                                            "alert_customer_id",
+                                                            "alert_classification_id",
+                                                            "alert_resolution_status_id"
+                                                        ]
+                                                    }
+                                                },
+                                                "analysis_status": {},
+                                                "asset_id": {
+                                                    "type": "integer"
+                                                },
+                                                "asset_uuid": {
+                                                    "type": "string"
+                                                },
+                                                "asset_description": {
+                                                    "type": "string"
+                                                },
+                                                "asset_domain": {},
+                                                "asset_ip": {
+                                                    "type": "string"
+                                                },
+                                                "asset_info": {},
+                                                "asset_compromise_status_id": {},
+                                                "asset_type_id": {
+                                                    "type": "integer"
+                                                },
+                                                "asset_tags": {
+                                                    "type": "string"
+                                                },
+                                                "case_id": {},
+                                                "date_added": {},
+                                                "date_update": {},
+                                                "user_id": {},
+                                                "analysis_status_id": {},
+                                                "custom_attributes": {},
+                                                "modification_history": {}
+                                            },
+                                            "required": [
+                                                "asset_name",
+                                                "asset_enrichment",
+                                                "asset_type",
+                                                "alerts",
+                                                "analysis_status",
+                                                "asset_id",
+                                                "asset_uuid",
+                                                "asset_description",
+                                                "asset_domain",
+                                                "asset_ip",
+                                                "asset_info",
+                                                "asset_compromise_status_id",
+                                                "asset_type_id",
+                                                "asset_tags",
+                                                "case_id",
+                                                "date_added",
+                                                "date_update",
+                                                "user_id",
+                                                "analysis_status_id",
+                                                "custom_attributes",
+                                                "modification_history"
+                                            ]
+                                        }
+                                    },
+                                    "resolution_status": {},
+                                    "cases": {
+                                        "type": "array"
+                                    },
+                                    "comments": {
+                                        "type": "array"
+                                    },
+                                    "alert_id": {
+                                        "type": "integer"
+                                    },
+                                    "alert_uuid": {
+                                        "type": "string"
+                                    },
+                                    "alert_title": {
+                                        "type": "string"
+                                    },
+                                    "alert_description": {
+                                        "type": "string"
+                                    },
+                                    "alert_source": {
+                                        "type": "string"
+                                    },
+                                    "alert_source_ref": {
+                                        "type": "string"
+                                    },
+                                    "alert_source_link": {
+                                        "type": "string"
+                                    },
+                                    "alert_source_content": {
+                                        "type": "object",
+                                        "properties": {
+                                            "_id": {
+                                                "type": "string"
+                                            },
+                                            "contextId": {
+                                                "type": "string"
+                                            },
+                                            "description": {
+                                                "type": "string"
+                                            },
+                                            "entities": {
+                                                "type": "array",
+                                                "items": {
+                                                    "type": "object",
+                                                    "properties": {
+                                                        "entityRole": {
+                                                            "type": "string"
+                                                        },
+                                                        "entityType": {
+                                                            "type": "integer"
+                                                        },
+                                                        "id": {
+                                                            "type": "string"
+                                                        },
+                                                        "inst": {
+                                                            "type": "integer"
+                                                        },
+                                                        "label": {
+                                                            "type": "string"
+                                                        },
+                                                        "pa": {
+                                                            "type": "string"
+                                                        },
+                                                        "saas": {
+                                                            "type": "integer"
+                                                        },
+                                                        "type": {
+                                                            "type": "string"
+                                                        }
+                                                    },
+                                                    "required": [
+                                                        "entityRole",
+                                                        "entityType",
+                                                        "id",
+                                                        "inst",
+                                                        "label",
+                                                        "pa",
+                                                        "saas",
+                                                        "type"
+                                                    ]
+                                                }
+                                            },
+                                            "title": {
+                                                "type": "string"
+                                            },
+                                            "URL": {
+                                                "type": "string"
+                                            }
+                                        }
+                                    },
+                                    "alert_severity_id": {
+                                        "type": "integer"
+                                    },
+                                    "alert_status_id": {
+                                        "type": "integer"
+                                    },
+                                    "alert_context": {
+                                        "type": "object",
+                                        "properties": {
+                                            "context_key": {
+                                                "type": "string"
+                                            }
+                                        }
+                                    },
+                                    "alert_source_event_time": {
+                                        "type": "string"
+                                    },
+                                    "alert_creation_time": {
+                                        "type": "string"
+                                    },
+                                    "alert_note": {
+                                        "type": "string"
+                                    },
+                                    "alert_tags": {
+                                        "type": "string"
+                                    },
+                                    "alert_owner_id": {},
+                                    "modification_history": {
+                                        "type": "object",
+                                        "properties": {
+                                            "1735234559.122843": {
+                                                "type": "object",
+                                                "properties": {
+                                                    "user": {
+                                                        "type": "string"
+                                                    },
+                                                    "user_id": {
+                                                        "type": "integer"
+                                                    },
+                                                    "action": {
+                                                        "type": "string"
+                                                    }
+                                                }
+                                            }
+                                        }
+                                    },
+                                    "alert_customer_id": {
+                                        "type": "integer"
+                                    },
+                                    "alert_classification_id": {
+                                        "type": "integer"
+                                    },
+                                    "alert_resolution_status_id": {}
+                                }
+                            }
+                        }
+                    }
+                }
+            },
+            "For_each_1": {
+                "foreach": "@outputs('Parse_JSON')?['body']?['data']?['assets']",
+                "actions": {
+                    "For_each": {
+                        "foreach": "@item()?['alerts']",
+                        "actions": {
+                            "Update_incident": {
+                                "type": "ApiConnection",
+                                "inputs": {
+                                    "host": {
+                                        "connection": {
+                                            "name": "@parameters('$connections')['azuresentinel-1']['connectionId']"
+                                        }
+                                    },
+                                    "method": "put",
+                                    "body": {
+                                        "incidentArmId": "@triggerBody()?['object']?['id']",
+                                        "tagsToAdd": {
+                                            "TagsToAdd": [
+                                                {
+                                                    "Tag": "@concat('alert_id:', item()?['alert_id'])"
+                                                }
+                                            ]
+                                        }
+                                    },
+                                    "path": "/Incidents"
+                                }
+                            }
+                        },
+                        "type": "Foreach"
+                    }
+                },
+                "runAfter": {
+                    "Parse_JSON": [
+                        "Succeeded"
+                    ]
+                },
+                "type": "Foreach"
+            }
+        },
+        "outputs": {},
+        "parameters": {
+            "$connections": {
+                "type": "Object",
+                "defaultValue": {}
+            }
+        }
+    },
+    "parameters": {
+        "$connections": {
+            "value": {
+                "azuresentinel-1": {
+                    "id": "/subscriptions/6b7f39e0-3188-45e6-9e0f-d0c900e9c2b7/providers/Microsoft.Web/locations/westeurope/managedApis/azuresentinel",
+                    "connectionId": "/subscriptions/6b7f39e0-3188-45e6-9e0f-d0c900e9c2b7/resourceGroups/rg-seclab-soc-lite-sentinel/providers/Microsoft.Web/connections/azuresentinel-2",
+                    "connectionName": "azuresentinel-2",
+                    "connectionProperties": {
+                        "authentication": {
+                            "type": "ManagedServiceIdentity"
+                        }
+                    }
+                }
+            }
+        }
+    }
+}
