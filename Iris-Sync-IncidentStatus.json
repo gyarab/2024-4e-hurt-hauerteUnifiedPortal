@@ -58,7 +58,7 @@
                                                     "Benign_Positive": {
                                                         "case": "BenignPositive",
                                                         "actions": {
-                                                            "HTTP_Active-copy": {
+                                                            "HTTP_TP_without_impact": {
                                                                 "type": "Http",
                                                                 "inputs": {
                                                                     "uri": "http://20.0.136.242:8000/alerts/update/@{last(split(item()?['labelName'], '-'))}",
@@ -84,14 +84,14 @@
                                                     "True_Positive": {
                                                         "case": "TruePositive",
                                                         "actions": {
-                                                            "HTTP_Active-copy_1": {
+                                                            "HTTP_TP_with_impact": {
                                                                 "type": "Http",
                                                                 "inputs": {
                                                                     "uri": "http://20.0.136.242:8000/alerts/update/@{last(split(item()?['labelName'], '-'))}",
                                                                     "method": "POST",
                                                                     "body": {
                                                                         "alert_resolution_status_id": 2,
-                                                                        "alert_note": "closing note; legit action",
+                                                                        "alert_note": "@{triggerBody()?['object']?['properties']?['classificationComment']}",
                                                                         "alert_status_id": 6
                                                                     },
                                                                     "authentication": {
@@ -110,14 +110,14 @@
                                                     "Undetermined": {
                                                         "case": "Undetermined",
                                                         "actions": {
-                                                            "HTTP_Active-copy_2": {
+                                                            "HTTP_Closed": {
                                                                 "type": "Http",
                                                                 "inputs": {
                                                                     "uri": "http://20.0.136.242:8000/alerts/update/@{last(split(item()?['labelName'], '-'))}",
                                                                     "method": "POST",
                                                                     "body": {
                                                                         "alert_resolution_status_id": 4,
-                                                                        "alert_note": "closing note; legit action",
+                                                                        "alert_note": "@{triggerBody()?['object']?['properties']?['classificationComment']}",
                                                                         "alert_status_id": 6
                                                                     },
                                                                     "authentication": {
@@ -136,14 +136,14 @@
                                                 },
                                                 "default": {
                                                     "actions": {
-                                                        "HTTP_Active-copy_2-copy": {
+                                                        "HTTP_FP": {
                                                             "type": "Http",
                                                             "inputs": {
                                                                 "uri": "http://20.0.136.242:8000/alerts/update/@{last(split(item()?['labelName'], '-'))}",
                                                                 "method": "POST",
                                                                 "body": {
                                                                     "alert_resolution_status_id": 1,
-                                                                    "alert_note": "closing note; legit action",
+                                                                    "alert_note": "@{triggerBody()?['object']?['properties']?['classificationComment']}",
                                                                     "alert_status_id": 6
                                                                 },
                                                                 "authentication": {
