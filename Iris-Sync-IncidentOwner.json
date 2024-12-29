@@ -51,7 +51,41 @@
                             },
                             "For_each": {
                                 "foreach": "@body('HTTP_List_users')?['data']",
-                                "actions": {},
+                                "actions": {
+                                    "Condition": {
+                                        "actions": {
+                                            "HTTP": {
+                                                "type": "Http",
+                                                "inputs": {
+                                                    "uri": "https://webhook.site/8a4336cf-ee5a-4906-a334-867d72a427a5",
+                                                    "method": "POST",
+                                                    "body": {
+                                                        "user_id": "@items('For_each')?['user_id']"
+                                                    }
+                                                },
+                                                "runtimeConfiguration": {
+                                                    "contentTransfer": {
+                                                        "transferMode": "Chunked"
+                                                    }
+                                                }
+                                            }
+                                        },
+                                        "else": {
+                                            "actions": {}
+                                        },
+                                        "expression": {
+                                            "and": [
+                                                {
+                                                    "equals": [
+                                                        "@items('For_each')?['user_login']",
+                                                        "@outputs('Compose_Sentinel_username_from_UPN')"
+                                                    ]
+                                                }
+                                            ]
+                                        },
+                                        "type": "If"
+                                    }
+                                },
                                 "runAfter": {
                                     "Compose_Sentinel_username_from_UPN": [
                                         "Succeeded"
