@@ -18,7 +18,58 @@
                 }
             }
         },
-        "actions": {},
+        "actions": {
+            "For_each_tag": {
+                "foreach": "@triggerBody()?['object']?['properties']?['labels']",
+                "actions": {
+                    "Condition_SOC_tag": {
+                        "actions": {
+                            "HTTP_List_users": {
+                                "type": "Http",
+                                "inputs": {
+                                    "uri": "http://20.0.136.242:8000/manage/users/list",
+                                    "method": "GET",
+                                    "authentication": {
+                                        "type": "Raw",
+                                        "value": "Bearer 0cEhjj1JIPmmC_abj3-On2TvQT_YtfflpQWpp_UcY_GMtkDDl-WmrLSW2QCvtOOQafaiGBFurQ3bQT26QZstBQ"
+                                    }
+                                },
+                                "runtimeConfiguration": {
+                                    "contentTransfer": {
+                                        "transferMode": "Chunked"
+                                    }
+                                }
+                            },
+                            "Compose_Sentinel_username_from_UPN": {
+                                "runAfter": {
+                                    "HTTP_List_users": [
+                                        "Succeeded"
+                                    ]
+                                },
+                                "type": "Compose",
+                                "inputs": "@substring(triggerBody()?['object']?['properties']?['owner']?['userPrincipalName'], 0, indexOf(triggerBody()?['object']?['properties']?['owner']?['userPrincipalName'], '@'))"
+                            }
+                        },
+                        "else": {
+                            "actions": {}
+                        },
+                        "expression": {
+                            "and": [
+                                {
+                                    "contains": [
+                                        "@item()?['labelName']",
+                                        "SOC-"
+                                    ]
+                                }
+                            ]
+                        },
+                        "type": "If"
+                    }
+                },
+                "runAfter": {},
+                "type": "Foreach"
+            }
+        },
         "outputs": {},
         "parameters": {
             "$connections": {
