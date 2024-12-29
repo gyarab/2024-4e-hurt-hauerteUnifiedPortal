@@ -1,0 +1,46 @@
+{
+    "definition": {
+        "$schema": "https://schema.management.azure.com/providers/Microsoft.Logic/schemas/2016-06-01/workflowdefinition.json#",
+        "contentVersion": "1.0.0.0",
+        "triggers": {
+            "Microsoft_Sentinel_incident": {
+                "type": "ApiConnectionWebhook",
+                "inputs": {
+                    "host": {
+                        "connection": {
+                            "name": "@parameters('$connections')['azuresentinel-1']['connectionId']"
+                        }
+                    },
+                    "body": {
+                        "callback_url": "@listCallbackUrl()"
+                    },
+                    "path": "/incident-creation"
+                }
+            }
+        },
+        "actions": {},
+        "outputs": {},
+        "parameters": {
+            "$connections": {
+                "type": "Object",
+                "defaultValue": {}
+            }
+        }
+    },
+    "parameters": {
+        "$connections": {
+            "value": {
+                "azuresentinel-1": {
+                    "id": "/subscriptions/6b7f39e0-3188-45e6-9e0f-d0c900e9c2b7/providers/Microsoft.Web/locations/westeurope/managedApis/azuresentinel",
+                    "connectionId": "/subscriptions/6b7f39e0-3188-45e6-9e0f-d0c900e9c2b7/resourceGroups/rg-seclab-soc-lite-sentinel/providers/Microsoft.Web/connections/azuresentinel-3",
+                    "connectionName": "azuresentinel-3",
+                    "connectionProperties": {
+                        "authentication": {
+                            "type": "ManagedServiceIdentity"
+                        }
+                    }
+                }
+            }
+        }
+    }
+}
