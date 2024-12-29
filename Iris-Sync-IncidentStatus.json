@@ -29,11 +29,14 @@
                                     "Active": {
                                         "case": "Active",
                                         "actions": {
-                                            "HTTP": {
+                                            "HTTP_Active": {
                                                 "type": "Http",
                                                 "inputs": {
-                                                    "uri": "http://20.0.136.242:8000/api/ping",
-                                                    "method": "GET",
+                                                    "uri": "http://20.0.136.242:8000/alerts/update/@{last(split(item()?['labelName'], '-'))}",
+                                                    "method": "POST",
+                                                    "body": {
+                                                        "alert_status_id": 4
+                                                    },
                                                     "authentication": {
                                                         "type": "Raw",
                                                         "value": "Bearer 0cEhjj1JIPmmC_abj3-On2TvQT_YtfflpQWpp_UcY_GMtkDDl-WmrLSW2QCvtOOQafaiGBFurQ3bQT26QZstBQ"
@@ -49,7 +52,97 @@
                                     },
                                     "Closed": {
                                         "case": "Closed",
-                                        "actions": {}
+                                        "actions": {
+                                            "Switch_-_Incident_classification": {
+                                                "cases": {
+                                                    "Benign_Positive": {
+                                                        "case": "BenignPositive",
+                                                        "actions": {
+                                                            "HTTP-copy": {
+                                                                "type": "Http",
+                                                                "inputs": {
+                                                                    "uri": "http://20.0.136.242:8000/api/ping",
+                                                                    "method": "GET",
+                                                                    "authentication": {
+                                                                        "type": "Raw",
+                                                                        "value": "Bearer 0cEhjj1JIPmmC_abj3-On2TvQT_YtfflpQWpp_UcY_GMtkDDl-WmrLSW2QCvtOOQafaiGBFurQ3bQT26QZstBQ"
+                                                                    }
+                                                                },
+                                                                "runtimeConfiguration": {
+                                                                    "contentTransfer": {
+                                                                        "transferMode": "Chunked"
+                                                                    }
+                                                                }
+                                                            }
+                                                        }
+                                                    },
+                                                    "True_Positive": {
+                                                        "case": "TruePositive",
+                                                        "actions": {
+                                                            "HTTP-copy_1": {
+                                                                "type": "Http",
+                                                                "inputs": {
+                                                                    "uri": "http://20.0.136.242:8000/api/ping",
+                                                                    "method": "GET",
+                                                                    "authentication": {
+                                                                        "type": "Raw",
+                                                                        "value": "Bearer 0cEhjj1JIPmmC_abj3-On2TvQT_YtfflpQWpp_UcY_GMtkDDl-WmrLSW2QCvtOOQafaiGBFurQ3bQT26QZstBQ"
+                                                                    }
+                                                                },
+                                                                "runtimeConfiguration": {
+                                                                    "contentTransfer": {
+                                                                        "transferMode": "Chunked"
+                                                                    }
+                                                                }
+                                                            }
+                                                        }
+                                                    },
+                                                    "Undetermined": {
+                                                        "case": "Undetermined",
+                                                        "actions": {
+                                                            "HTTP-copy_2": {
+                                                                "type": "Http",
+                                                                "inputs": {
+                                                                    "uri": "http://20.0.136.242:8000/api/ping",
+                                                                    "method": "GET",
+                                                                    "authentication": {
+                                                                        "type": "Raw",
+                                                                        "value": "Bearer 0cEhjj1JIPmmC_abj3-On2TvQT_YtfflpQWpp_UcY_GMtkDDl-WmrLSW2QCvtOOQafaiGBFurQ3bQT26QZstBQ"
+                                                                    }
+                                                                },
+                                                                "runtimeConfiguration": {
+                                                                    "contentTransfer": {
+                                                                        "transferMode": "Chunked"
+                                                                    }
+                                                                }
+                                                            }
+                                                        }
+                                                    }
+                                                },
+                                                "default": {
+                                                    "actions": {
+                                                        "HTTP-copy_3": {
+                                                            "type": "Http",
+                                                            "inputs": {
+                                                                "uri": "http://20.0.136.242:8000/api/ping",
+                                                                "method": "GET",
+                                                                "authentication": {
+                                                                    "type": "Raw",
+                                                                    "value": "Bearer 0cEhjj1JIPmmC_abj3-On2TvQT_YtfflpQWpp_UcY_GMtkDDl-WmrLSW2QCvtOOQafaiGBFurQ3bQT26QZstBQ"
+                                                                }
+                                                            },
+                                                            "runtimeConfiguration": {
+                                                                "contentTransfer": {
+                                                                    "transferMode": "Chunked"
+                                                                }
+                                                            }
+                                                        }
+                                                    }
+                                                },
+                                                "expression": "@triggerBody()?['object']?['properties']?['classification']",
+                                                "type": "Switch"
+                                            }
+                                        }
                                     }
                                 },
                                 "default": {
