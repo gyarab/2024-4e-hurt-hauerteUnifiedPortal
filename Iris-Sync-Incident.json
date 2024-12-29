@@ -83,12 +83,12 @@
                             "URL": ""
                         },
                         "alert_severity_id": 4,
-                        "alert_status_id": 3,
+                        "alert_status_id": 2,
                         "alert_context": {
                             "context_key": "context_value"
                         },
                         "alert_source_event_time": "@{triggerBody()?['object']?['properties']?['createdTimeUtc']}",
-                        "alert_note": "@{triggerBody()?['object']?['id']}",
+                        "alert_note": "alert note",
                         "alert_tags": "defender,anothertag",
                         "alert_iocs": [],
                         "alert_assets": [],
