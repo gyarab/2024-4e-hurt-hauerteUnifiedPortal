@@ -48,6 +48,16 @@
                                 },
                                 "type": "Compose",
                                 "inputs": "@substring(triggerBody()?['object']?['properties']?['owner']?['userPrincipalName'], 0, indexOf(triggerBody()?['object']?['properties']?['owner']?['userPrincipalName'], '@'))"
+                            },
+                            "For_each": {
+                                "foreach": "@body('HTTP_List_users')?['data']",
+                                "actions": {},
+                                "runAfter": {
+                                    "Compose_Sentinel_username_from_UPN": [
+                                        "Succeeded"
+                                    ]
+                                },
+                                "type": "Foreach"
                             }
                         },
                         "else": {
