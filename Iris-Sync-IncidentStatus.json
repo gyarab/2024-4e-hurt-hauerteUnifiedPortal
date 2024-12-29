@@ -18,7 +18,67 @@
                 }
             }
         },
-        "actions": {},
+        "actions": {
+            "For_each_tag": {
+                "foreach": "@triggerBody()?['object']?['properties']?['labels']",
+                "actions": {
+                    "Condition_-_SOC_tag": {
+                        "actions": {
+                            "Switch_-_Incident_Status": {
+                                "cases": {
+                                    "Active": {
+                                        "case": "Active",
+                                        "actions": {
+                                            "HTTP": {
+                                                "type": "Http",
+                                                "inputs": {
+                                                    "uri": "http://20.0.136.242:8000/api/ping",
+                                                    "method": "GET",
+                                                    "authentication": {
+                                                        "type": "Raw",
+                                                        "value": "Bearer 0cEhjj1JIPmmC_abj3-On2TvQT_YtfflpQWpp_UcY_GMtkDDl-WmrLSW2QCvtOOQafaiGBFurQ3bQT26QZstBQ"
+                                                    }
+                                                },
+                                                "runtimeConfiguration": {
+                                                    "contentTransfer": {
+                                                        "transferMode": "Chunked"
+                                                    }
+                                                }
+                                            }
+                                        }
+                                    },
+                                    "Closed": {
+                                        "case": "Closed",
+                                        "actions": {}
+                                    }
+                                },
+                                "default": {
+                                    "actions": {}
+                                },
+                                "expression": "@triggerBody()?['object']?['properties']?['status']",
+                                "type": "Switch"
+                            }
+                        },
+                        "else": {
+                            "actions": {}
+                        },
+                        "expression": {
+                            "and": [
+                                {
+                                    "contains": [
+                                        "@item()?['labelName']",
+                                        "SOC-"
+                                    ]
+                                }
+                            ]
+                        },
+                        "type": "If"
+                    }
+                },
+                "runAfter": {},
+                "type": "Foreach"
+            }
+        },
         "outputs": {},
         "parameters": {
             "$connections": {
