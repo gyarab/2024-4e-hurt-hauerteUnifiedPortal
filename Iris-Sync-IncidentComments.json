@@ -1,0 +1,97 @@
+{
+    "definition": {
+        "$schema": "https://schema.management.azure.com/providers/Microsoft.Logic/schemas/2016-06-01/workflowdefinition.json#",
+        "contentVersion": "1.0.0.0",
+        "triggers": {
+            "Microsoft_Sentinel_incident": {
+                "type": "ApiConnectionWebhook",
+                "inputs": {
+                    "host": {
+                        "connection": {
+                            "name": "@parameters('$connections')['azuresentinel-1']['connectionId']"
+                        }
+                    },
+                    "body": {
+                        "callback_url": "@listCallbackUrl()"
+                    },
+                    "path": "/incident-creation"
+                }
+            }
+        },
+        "actions": {
+            "For_each_tag": {
+                "foreach": "@triggerBody()?['object']?['properties']?['labels']",
+                "actions": {
+                    "Condition_-_SOC_tag": {
+                        "actions": {
+                            "For_each_comment": {
+                                "foreach": "@triggerBody()?['incidentUpdates']?['comments']",
+                                "actions": {
+                                    "HTTP_add_comment": {
+                                        "type": "Http",
+                                        "inputs": {
+                                            "uri": "http://20.0.136.242:8000/alerts/@{last(split(items('For_each_tag')?['labelName'], '-'))}/comments/add",
+                                            "method": "POST",
+                                            "body": {
+                                                "comment_text": "@{items('For_each_comment')?['properties']?['message']}"
+                                            },
+                                            "authentication": {
+                                                "type": "Raw",
+                                                "value": "Bearer 0cEhjj1JIPmmC_abj3-On2TvQT_YtfflpQWpp_UcY_GMtkDDl-WmrLSW2QCvtOOQafaiGBFurQ3bQT26QZstBQ"
+                                            }
+                                        },
+                                        "runtimeConfiguration": {
+                                            "contentTransfer": {
+                                                "transferMode": "Chunked"
+                                            }
+                                        }
+                                    }
+                                },
+                                "type": "Foreach"
+                            }
+                        },
+                        "else": {
+                            "actions": {}
+                        },
+                        "expression": {
+                            "and": [
+                                {
+                                    "contains": [
+                                        "@item()?['labelName']",
+                                        "SOC-"
+                                    ]
+                                }
+                            ]
+                        },
+                        "type": "If"
+                    }
+                },
+                "runAfter": {},
+                "type": "Foreach"
+            }
+        },
+        "outputs": {},
+        "parameters": {
+            "$connections": {
+                "type": "Object",
+                "defaultValue": {}
+            }
+        }
+    },
+    "parameters": {
+        "$connections": {
+            "value": {
+                "azuresentinel-1": {
+                    "id": "/subscriptions/6b7f39e0-3188-45e6-9e0f-d0c900e9c2b7/providers/Microsoft.Web/locations/westeurope/managedApis/azuresentinel",
+                    "connectionId": "/subscriptions/6b7f39e0-3188-45e6-9e0f-d0c900e9c2b7/resourceGroups/rg-seclab-soc-lite-sentinel/providers/Microsoft.Web/connections/azuresentinel-6",
+                    "connectionName": "azuresentinel-6",
+                    "connectionProperties": {
+                        "authentication": {
+                            "type": "ManagedServiceIdentity"
+                        }
+                    }
+                }
+            }
+        }
+    }
+}
