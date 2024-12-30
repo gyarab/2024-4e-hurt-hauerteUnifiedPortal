@@ -1,0 +1,117 @@
+{
+    "definition": {
+        "$schema": "https://schema.management.azure.com/providers/Microsoft.Logic/schemas/2016-06-01/workflowdefinition.json#",
+        "contentVersion": "1.0.0.0",
+        "triggers": {
+            "Microsoft_Sentinel_incident": {
+                "type": "ApiConnectionWebhook",
+                "inputs": {
+                    "host": {
+                        "connection": {
+                            "name": "@parameters('$connections')['azuresentinel-1']['connectionId']"
+                        }
+                    },
+                    "body": {
+                        "callback_url": "@listCallbackUrl()"
+                    },
+                    "path": "/incident-creation"
+                }
+            }
+        },
+        "actions": {
+            "For_each_tag": {
+                "foreach": "@triggerBody()?['object']?['properties']?['labels']",
+                "actions": {
+                    "Condition_-_SOC_tag": {
+                        "actions": {
+                            "Switch_-_Incident_sev": {
+                                "cases": {
+                                    "Low": {
+                                        "case": "Low",
+                                        "actions": {
+                                            "HTTP_set_to_Low": {
+                                                "type": "Http",
+                                                "inputs": {
+                                                    "uri": "http://20.0.136.242:8000/alerts/update/@{last(split(item()?['labelName'], '-'))}",
+                                                    "method": "POST",
+                                                    "body": {
+                                                        "alert_severity_id": 4
+                                                    },
+                                                    "authentication": {
+                                                        "type": "Raw",
+                                                        "value": "Bearer 0cEhjj1JIPmmC_abj3-On2TvQT_YtfflpQWpp_UcY_GMtkDDl-WmrLSW2QCvtOOQafaiGBFurQ3bQT26QZstBQ"
+                                                    }
+                                                },
+                                                "runtimeConfiguration": {
+                                                    "contentTransfer": {
+                                                        "transferMode": "Chunked"
+                                                    }
+                                                }
+                                            }
+                                        }
+                                    },
+                                    "Medium": {
+                                        "case": "Medium",
+                                        "actions": {}
+                                    },
+                                    "High": {
+                                        "case": "High",
+                                        "actions": {}
+                                    },
+                                    "Informational": {
+                                        "case": "Informational",
+                                        "actions": {}
+                                    }
+                                },
+                                "default": {
+                                    "actions": {}
+                                },
+                                "expression": "@triggerBody()?['object']?['properties']?['severity']",
+                                "type": "Switch"
+                            }
+                        },
+                        "else": {
+                            "actions": {}
+                        },
+                        "expression": {
+                            "and": [
+                                {
+                                    "contains": [
+                                        "@item()?['labelName']",
+                                        "SOC-"
+                                    ]
+                                }
+                            ]
+                        },
+                        "type": "If"
+                    }
+                },
+                "runAfter": {},
+                "type": "Foreach"
+            }
+        },
+        "outputs": {},
+        "parameters": {
+            "$connections": {
+                "type": "Object",
+                "defaultValue": {}
+            }
+        }
+    },
+    "parameters": {
+        "$connections": {
+            "value": {
+                "azuresentinel-1": {
+                    "id": "/subscriptions/6b7f39e0-3188-45e6-9e0f-d0c900e9c2b7/providers/Microsoft.Web/locations/westeurope/managedApis/azuresentinel",
+                    "connectionId": "/subscriptions/6b7f39e0-3188-45e6-9e0f-d0c900e9c2b7/resourceGroups/rg-seclab-soc-lite-sentinel/providers/Microsoft.Web/connections/azuresentinel-5",
+                    "connectionName": "azuresentinel-5",
+                    "connectionProperties": {
+                        "authentication": {
+                            "type": "ManagedServiceIdentity"
+                        }
+                    }
+                }
+            }
+        }
+    }
+}
