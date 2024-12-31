@@ -82,7 +82,7 @@
                                 "type": "Query",
                                 "inputs": {
                                     "from": "@body('Parse_JSON')",
-                                    "where": "@equals(item()['iris'],triggerBody()['alert_raw'][0]['resolution_status']['resolution_status_name'])"
+                                    "where": "@equals(item()['iris'],triggerBody()?['alert_raw']?[0]?['resolution_status']?['resolution_status_name'])"
                                 }
                             },
                             "For_each": {
@@ -102,7 +102,7 @@
                                                 "status": "Closed",
                                                 "classification": {
                                                     "ClassificationAndReason": "@items('For_each')['sentinel']",
-                                                    "ClassificationReasonText": "@triggerBody()['alert_raw'][0]['alert_note']"
+                                                    "ClassificationReasonText": "@triggerBody()?['alert_raw']?[0]?['alert_note']"
                                                 }
                                             },
                                             "path": "/Incidents"
