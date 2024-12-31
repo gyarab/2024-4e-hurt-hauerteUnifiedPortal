@@ -98,7 +98,12 @@
                                             },
                                             "method": "put",
                                             "body": {
-                                                "incidentArmId": "@triggerBody()['alert_raw'][0]['alert_source_content']['contextId']"
+                                                "incidentArmId": "@triggerBody()['alert_raw'][0]['alert_source_content']['contextId']",
+                                                "status": "Closed",
+                                                "classification": {
+                                                    "ClassificationAndReason": "@items('For_each')['sentinel']",
+                                                    "ClassificationReasonText": "@triggerBody()['alert_raw'][0]['alert_note']"
+                                                }
                                             },
                                             "path": "/Incidents"
                                         }
