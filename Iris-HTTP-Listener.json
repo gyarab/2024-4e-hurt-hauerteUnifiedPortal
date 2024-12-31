@@ -1,0 +1,89 @@
+{
+    "definition": {
+        "$schema": "https://schema.management.azure.com/providers/Microsoft.Logic/schemas/2016-06-01/workflowdefinition.json#",
+        "contentVersion": "1.0.0.0",
+        "triggers": {
+            "When_a_HTTP_request_is_received": {
+                "type": "Request",
+                "kind": "Http",
+                "inputs": {
+                    "schema": {
+                        "type": "object",
+                        "properties": {
+                            "message": {
+                                "type": "string"
+                            },
+                            "additional_data": {
+                                "type": "string"
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "actions": {
+            "Switch_-_status": {
+                "runAfter": {},
+                "cases": {
+                    "In_progress": {
+                        "case": "In progress",
+                        "actions": {
+                            "Update_incident": {
+                                "type": "ApiConnection",
+                                "inputs": {
+                                    "host": {
+                                        "connection": {
+                                            "name": "@parameters('$connections')['azuresentinel']['connectionId']"
+                                        }
+                                    },
+                                    "method": "put",
+                                    "body": {
+                                        "incidentArmId": "@triggerBody()['alert_raw'][0]['alert_source_content']['contextId']",
+                                        "status": "Active"
+                                    },
+                                    "path": "/Incidents"
+                                }
+                            }
+                        }
+                    },
+                    "Pending": {
+                        "case": "Pending",
+                        "actions": {}
+                    },
+                    "Closed": {
+                        "case": "Closed",
+                        "actions": {}
+                    }
+                },
+                "default": {
+                    "actions": {}
+                },
+                "expression": "@triggerBody()['alert_raw'][0]['status']['status_name']",
+                "type": "Switch"
+            }
+        },
+        "outputs": {},
+        "parameters": {
+            "$connections": {
+                "type": "Object",
+                "defaultValue": {}
+            }
+        }
+    },
+    "parameters": {
+        "$connections": {
+            "value": {
+                "azuresentinel": {
+                    "id": "/subscriptions/6b7f39e0-3188-45e6-9e0f-d0c900e9c2b7/providers/Microsoft.Web/locations/westeurope/managedApis/azuresentinel",
+                    "connectionId": "/subscriptions/6b7f39e0-3188-45e6-9e0f-d0c900e9c2b7/resourceGroups/rg-seclab-soc-lite-sentinel/providers/Microsoft.Web/connections/azuresentinel-3",
+                    "connectionName": "azuresentinel-3",
+                    "connectionProperties": {
+                        "authentication": {
+                            "type": "ManagedServiceIdentity"
+                        }
+                    }
+                }
+            }
+        }
+    }
+}
