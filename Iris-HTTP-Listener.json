@@ -46,12 +46,59 @@
                             }
                         }
                     },
-                    "Pending": {
-                        "case": "Pending",
-                        "actions": {}
-                    },
                     "Closed": {
                         "case": "Closed",
+                        "actions": {
+                            "Parse_JSON": {
+                                "type": "ParseJson",
+                                "inputs": {
+                                    "content": "@parameters('ResolutionMapping')",
+                                    "schema": {
+                                        "type": "array",
+                                        "items": {
+                                            "type": "object",
+                                            "properties": {
+                                                "sentinel": {
+                                                    "type": "string"
+                                                },
+                                                "iris": {
+                                                    "type": "string"
+                                                }
+                                            },
+                                            "required": [
+                                                "sentinel",
+                                                "iris"
+                                            ]
+                                        }
+                                    }
+                                }
+                            },
+                            "Filter_array": {
+                                "runAfter": {
+                                    "Parse_JSON": [
+                                        "Succeeded"
+                                    ]
+                                },
+                                "type": "Query",
+                                "inputs": {
+                                    "from": "@body('Parse_JSON')",
+                                    "where": "@equals(item()['iris'],triggerBody()['alert_raw'][0]['resolution_status']['resolution_status_name'])"
+                                }
+                            },
+                            "For_each": {
+                                "foreach": "@outputs('Filter_array')['body']",
+                                "actions": {},
+                                "runAfter": {
+                                    "Filter_array": [
+                                        "Succeeded"
+                                    ]
+                                },
+                                "type": "Foreach"
+                            }
+                        }
+                    },
+                    "Pending": {
+                        "case": "Pending",
                         "actions": {}
                     }
                 },
@@ -64,6 +111,35 @@
         },
         "outputs": {},
         "parameters": {
+            "ResolutionMapping": {
+                "defaultValue": [
+                    {
+                        "sentinel": "BenignPositive-SuspiciousButExpected",
+                        "iris": "TruePositiveWithoutImpact"
+                    },
+                    {
+                        "sentinel": "BenignPositive-SuspiciousButExpected",
+                        "iris": "Legitimate"
+                    },
+                    {
+                        "sentinel": "FalsePositive-IncorrectAlertLogic",
+                        "iris": "FalsePositive"
+                    },
+                    {
+                        "sentinel": "TruePositive-SuspiciousActivity",
+                        "iris": "TruePositiveWithImpact"
+                    },
+                    {
+                        "sentinel": "Undetermined",
+                        "iris": "Unknownresolutionstatus"
+                    },
+                    {
+                        "sentinel": "Undetermined",
+                        "iris": "Unknownresolutionstatus"
+                    }
+                ],
+                "type": "Array"
+            },
             "$connections": {
                 "type": "Object",
                 "defaultValue": {}
