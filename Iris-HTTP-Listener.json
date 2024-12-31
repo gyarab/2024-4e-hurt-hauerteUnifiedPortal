@@ -75,7 +75,7 @@
                             },
                             "Filter_array": {
                                 "runAfter": {
-                                    "Parse_JSON": [
+                                    "Condition": [
                                         "Succeeded"
                                     ]
                                 },
@@ -115,6 +115,28 @@
                                     ]
                                 },
                                 "type": "Foreach"
+                            },
+                            "Condition": {
+                                "actions": {},
+                                "runAfter": {
+                                    "Parse_JSON": [
+                                        "Succeeded"
+                                    ]
+                                },
+                                "else": {
+                                    "actions": {}
+                                },
+                                "expression": {
+                                    "and": [
+                                        {
+                                            "equals": [
+                                                "@triggerBody()?['alert_raw']?[0]?['resolution_status']?['resolution_status_name']",
+                                                ""
+                                            ]
+                                        }
+                                    ]
+                                },
+                                "type": "If"
                             }
                         }
                     },
@@ -128,6 +150,74 @@
                 },
                 "expression": "@triggerBody()['alert_raw'][0]['status']['status_name']",
                 "type": "Switch"
+            },
+            "Parse_JSON_1": {
+                "runAfter": {
+                    "Switch_-_status": [
+                        "Succeeded"
+                    ]
+                },
+                "type": "ParseJson",
+                "inputs": {
+                    "content": "@parameters('SeverityMapping')",
+                    "schema": {
+                        "type": "array",
+                        "items": {
+                            "type": "object",
+                            "properties": {
+                                "sentinel": {
+                                    "type": "string"
+                                },
+                                "iris": {
+                                    "type": "string"
+                                }
+                            },
+                            "required": [
+                                "sentinel",
+                                "iris"
+                            ]
+                        }
+                    }
+                }
+            },
+            "Filter_array_1": {
+                "runAfter": {
+                    "Parse_JSON_1": [
+                        "Succeeded"
+                    ]
+                },
+                "type": "Query",
+                "inputs": {
+                    "from": "@body('Parse_JSON_1')",
+                    "where": "@equals(item()['iris'],triggerBody()?['alert_raw']?[0]?['severity']?['severity_name'])"
+                }
+            },
+            "For_each_1": {
+                "foreach": "@body('Filter_array_1')",
+                "actions": {
+                    "Update_incident_2": {
+                        "type": "ApiConnection",
+                        "inputs": {
+                            "host": {
+                                "connection": {
+                                    "name": "@parameters('$connections')['azuresentinel']['connectionId']"
+                                }
+                            },
+                            "method": "put",
+                            "body": {
+                                "incidentArmId": "@triggerBody()['alert_raw'][0]['alert_source_content']['contextId']",
+                                "severity": "@items('For_each_1')['sentinel']"
+                            },
+                            "path": "/Incidents"
+                        }
+                    }
+                },
+                "runAfter": {
+                    "Filter_array_1": [
+                        "Succeeded"
+                    ]
+                },
+                "type": "Foreach"
             }
         },
         "outputs": {},
@@ -157,6 +247,35 @@
                     {
                         "sentinel": "Undetermined",
                         "iris": "Not Applicable"
+                    }
+                ],
+                "type": "Array"
+            },
+            "SeverityMapping": {
+                "defaultValue": [
+                    {
+                        "sentinel": "Low",
+                        "iris": "Low"
+                    },
+                    {
+                        "sentinel": "Medium",
+                        "iris": "Medium"
+                    },
+                    {
+                        "sentinel": "High",
+                        "iris": "High"
+                    },
+                    {
+                        "sentinel": "High",
+                        "iris": "Critical"
+                    },
+                    {
+                        "sentinel": "Low",
+                        "iris": "Unspecified"
+                    },
+                    {
+                        "sentinel": "Informational",
+                        "iris": "Informational"
                     }
                 ],
                 "type": "Array"
