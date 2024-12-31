@@ -87,7 +87,23 @@
                             },
                             "For_each": {
                                 "foreach": "@outputs('Filter_array')['body']",
-                                "actions": {},
+                                "actions": {
+                                    "Update_incident_1": {
+                                        "type": "ApiConnection",
+                                        "inputs": {
+                                            "host": {
+                                                "connection": {
+                                                    "name": "@parameters('$connections')['azuresentinel']['connectionId']"
+                                                }
+                                            },
+                                            "method": "put",
+                                            "body": {
+                                                "incidentArmId": "@triggerBody()['alert_raw'][0]['alert_source_content']['contextId']"
+                                            },
+                                            "path": "/Incidents"
+                                        }
+                                    }
+                                },
                                 "runAfter": {
                                     "Filter_array": [
                                         "Succeeded"
@@ -115,7 +131,7 @@
                 "defaultValue": [
                     {
                         "sentinel": "BenignPositive-SuspiciousButExpected",
-                        "iris": "TruePositiveWithoutImpact"
+                        "iris": "True Positive Without Impact"
                     },
                     {
                         "sentinel": "BenignPositive-SuspiciousButExpected",
@@ -123,19 +139,19 @@
                     },
                     {
                         "sentinel": "FalsePositive-IncorrectAlertLogic",
-                        "iris": "FalsePositive"
+                        "iris": "False Positive"
                     },
                     {
                         "sentinel": "TruePositive-SuspiciousActivity",
-                        "iris": "TruePositiveWithImpact"
+                        "iris": "True Positive With Impact"
                     },
                     {
                         "sentinel": "Undetermined",
-                        "iris": "Unknownresolutionstatus"
+                        "iris": "Unknown resolution status"
                     },
                     {
                         "sentinel": "Undetermined",
-                        "iris": "Unknownresolutionstatus"
+                        "iris": "Not Applicable"
                     }
                 ],
                 "type": "Array"
