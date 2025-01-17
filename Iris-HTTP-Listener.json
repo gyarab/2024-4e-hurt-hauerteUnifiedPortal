@@ -218,6 +218,75 @@
                     ]
                 },
                 "type": "Foreach"
+            },
+            "Parse_User_Mapping": {
+                "runAfter": {
+                    "For_each_1": [
+                        "Succeeded"
+                    ]
+                },
+                "type": "ParseJson",
+                "inputs": {
+                    "content": "@parameters('UserMapping')",
+                    "schema": {
+                        "type": "array",
+                        "items": {
+                            "type": "object",
+                            "properties": {
+                                "sentinel": {
+                                    "type": "string"
+                                },
+                                "iris": {
+                                    "type": "string"
+                                }
+                            },
+                            "required": [
+                                "sentinel",
+                                "iris"
+                            ]
+                        }
+                    }
+                }
+            },
+            "For_each_2": {
+                "foreach": "@body('Filter_assignee')",
+                "actions": {
+                    "Update_incident_3": {
+                        "type": "ApiConnection",
+                        "inputs": {
+                            "host": {
+                                "connection": {
+                                    "name": "@parameters('$connections')['azuresentinel']['connectionId']"
+                                }
+                            },
+                            "method": "put",
+                            "body": {
+                                "incidentArmId": "@triggerBody()['alert_raw'][0]['alert_source_content']['contextId']",
+                                "ownerAction": "Assign",
+                                "owner": "martin.stengel@noibitseclab.onmicrosoft.com"
+                            },
+                            "path": "/Incidents"
+                        }
+                    }
+                },
+                "runAfter": {
+                    "Filter_assignee": [
+                        "Succeeded"
+                    ]
+                },
+                "type": "Foreach"
+            },
+            "Filter_assignee": {
+                "runAfter": {
+                    "Parse_User_Mapping": [
+                        "Succeeded"
+                    ]
+                },
+                "type": "Query",
+                "inputs": {
+                    "from": "@body('Parse_User_Mapping')",
+                    "where": "@equals(item()['iris'],triggerBody()?['alert_raw']?[0]?['owner']?['user_login'])"
+                }
             }
         },
         "outputs": {},
@@ -276,6 +345,43 @@
                     {
                         "sentinel": "Informational",
                         "iris": "Informational"
+                    }
+                ],
+                "type": "Array"
+            },
+            "UserMapping": {
+                "defaultValue": [
+                    {
+                        "sentinel": "martin.stengel@noibitseclab.onmicrosoft.com",
+                        "iris": "martin.novotny"
+                    },
+                    {
+                        "sentinel": "martin.stengel@noibitseclab.onmicrosoft.com",
+                        "iris": "oldrich.bilek"
+                    },
+                    {
+                        "sentinel": "martin.stengel@noibitseclab.onmicrosoft.com",
+                        "iris": "oliver.hurt"
+                    },
+                    {
+                        "sentinel": "martin.stengel@noibitseclab.onmicrosoft.com",
+                        "iris": "filip.vytiska"
+                    },
+                    {
+                        "sentinel": "martin.stengel@noibitseclab.onmicrosoft.com",
+                        "iris": "tomas.zellerin"
+                    },
+                    {
+                        "sentinel": "martin.stengel@noibitseclab.onmicrosoft.com",
+                        "iris": "lukas.kypus"
+                    },
+                    {
+                        "sentinel": "martin.stengel@noibitseclab.onmicrosoft.com",
+                        "iris": "jiri.suchora"
+                    },
+                    {
+                        "sentinel": "martin.stengel@noibitseclab.onmicrosoft.com",
+                        "iris": "martin.stengel"
                     }
                 ],
                 "type": "Array"
