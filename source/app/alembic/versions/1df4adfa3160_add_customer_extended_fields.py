@@ -24,9 +24,9 @@ def upgrade():
                       sa.Column('description', sa.Text())
                       )
 
-    if not _table_has_column('client', 'sla'):
+    if not _table_has_column('client', 'alerts'):
         op.add_column('client',
-                      sa.Column('sla', sa.Text())
+                      sa.Column('alerts', sa.Text())
                       )
 
     if not _table_has_column('client', 'creation_date'):

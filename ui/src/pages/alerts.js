@@ -982,7 +982,7 @@ function renderAlert(alert, expanded=false, modulesOptionsAlertReq,
                           <button type="button" class="btn btn-alert-success btn-sm ml-2" onclick="changeStatusAlert(${alert.alert_id}, 'In progress');">Set in progress</button>
                       `: ` 
                       <button type="button" class="btn btn-alert-danger btn-sm ml-2" onclick="editAlert(${alert.alert_id}, true);">Close with note</button>
-                      <button type="button" class="btn btn-alert-danger btn-sm ml-2" onclick="changeStatusAlert(${alert.alert_id}, 'Closed');">Close</button>
+                     <!-- <button type="button" class="btn btn-alert-danger btn-sm ml-2" onclick="changeStatusAlert(${alert.alert_id}, 'Closed');">Close</button> -->
                       `}
                 </div>
                 <span class="mt-4">${alert.alert_description.replaceAll('\n', '<br/>').replaceAll('\t', '  ')}</span>
@@ -1215,10 +1215,16 @@ function renderAlert(alert, expanded=false, modulesOptionsAlertReq,
                            </div>`
               : ""
       }
-                    
+                    <h3 class="title mt-3 mb-3"><strong>SLA</strong></h3>
+                    <div class="container" style="display: flex;justify-content: center;">
+                        <div id="SLAcontainer"></div>
+                    </div>
+                                   
                     </div>
                   </div>
               </div>
+             
+              <!-- alert "footer" starts here --> 
               ${alert.cases ? `<div class='row mt-4 mb-2'>` + alert.cases.map((case_) => `
                 <div class="dropdown ml-2 d-inline-block">
                       <a class="bg-transparent ml-3" title="Merged in case #${case_}" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false" href="javascript:void(0)">
@@ -1324,6 +1330,9 @@ async function refreshAlert(alertId, alertData, expanded=false) {
     const alertElement = $(`#alertCard-${alertId}`);
     const alertHtml = renderAlert(alertData, expanded, modulesOptionsAlertReq.data, modulesOptionsIocReq.data);
     alertElement.replaceWith(alertHtml);
+    // Dispatch a custom event when done:
+    //document.dispatchEvent(new CustomEvent('alertRendered'));
+    //console.log('alertRendered event dispatched');
 }
 
 async function fetchModulesOptionsAlert() {
@@ -1405,6 +1414,9 @@ async function updateAlerts(page, per_page, filters = {}, paging=false){
                                                modulesOptionsIocReq.data);
           alertElement.html(alertHtml);
           alertsContainer.append(alertElement);
+          // Dispatch a custom event when done:
+          document.dispatchEvent(new CustomEvent('alertRendered'));
+          console.log('alertRendered event dispatched');
       });
   }
 
