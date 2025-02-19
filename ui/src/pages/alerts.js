@@ -1215,6 +1215,10 @@ function renderAlert(alert, expanded=false, modulesOptionsAlertReq,
                            </div>`
               : ""
       }
+                    <h3 class="title mt-3 mb-3"><strong>SLA</strong></h3>
+                    <div class="container" style="display: flex;justify-content: center;">
+                        <div class="SLAcontainer"></div>
+                    </div>
                     
                     </div>
                   </div>
@@ -1405,6 +1409,9 @@ async function updateAlerts(page, per_page, filters = {}, paging=false){
                                                modulesOptionsIocReq.data);
           alertElement.html(alertHtml);
           alertsContainer.append(alertElement);
+          console.log("alert Tile: "+alert.alert_source_event_time);
+            // Dispatch a custom event when done:
+            document.dispatchEvent(new CustomEvent('alertRendered', { detail: { IRIStime: alert.alert_source_event_time }}));
       });
   }
 
