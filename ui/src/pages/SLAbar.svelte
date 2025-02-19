@@ -12,6 +12,8 @@
     const minutes = String(now.getMinutes()).padStart(2, '0');
 	startDateTime = `${day}/${month}/${year} ${hours}:${minutes}`;
 	//startDateTime = "06/02/2025 20:58";
+    export let IRIStime;
+    console.log("IRIStimeFromSvelte: "+IRIStime);
 
 	//setting up severity
 	const SEVERITY ={

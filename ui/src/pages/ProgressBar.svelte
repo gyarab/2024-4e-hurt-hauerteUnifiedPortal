@@ -67,6 +67,7 @@ import { onDestroy } from 'svelte';
   function complete() {
 	  //elapsed = 0
 	  clearInterval(interval)
+	  currstate = MyState.PAUSED;
 	  //turn the shit green
   }
 
