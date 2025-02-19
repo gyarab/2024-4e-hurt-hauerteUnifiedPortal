@@ -1409,9 +1409,9 @@ async function updateAlerts(page, per_page, filters = {}, paging=false){
                                                modulesOptionsIocReq.data);
           alertElement.html(alertHtml);
           alertsContainer.append(alertElement);
-          console.log("alert Tile: "+alert.alert_source_event_time);
+          console.log("alert Tile: "+formatTime(alert.alert_creation_time));
             // Dispatch a custom event when done:
-            document.dispatchEvent(new CustomEvent('alertRendered', { detail: { IRIStime: alert.alert_source_event_time }}));
+            document.dispatchEvent(new CustomEvent('alertRendered', { detail: { IRIStime: alert.alert_creation_time }}));
       });
   }
 

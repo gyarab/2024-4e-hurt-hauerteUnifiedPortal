@@ -3,6 +3,7 @@
 	//setting up startDateTime value
 	let startDateTime = "01/02/2025 14:30";//defalut value
     //calculate timestamp DD/MM/YYYY HH:MM of current time
+    /*
     const now = new Date();
     const day = String(now.getDate()).padStart(2, '0');
     const month = String(now.getMonth() + 1).padStart(2, '0'); // Months are zero-based
@@ -10,9 +11,28 @@
     const hours = String(now.getHours()).padStart(2, '0');
     const minutes = String(now.getMinutes()).padStart(2, '0');
 	startDateTime = `${day}/${month}/${year} ${hours}:${minutes}`;
+     */
+
 	//startDateTime = "06/02/2025 20:58";
     export let IRIStime;
     console.log("IRIStimeFromSvelte: "+IRIStime);
+
+    const date = new Date(IRIStime);
+
+    // Get day, month, year, hours, and minutes with proper padding
+    const day = String(date.getDate()).padStart(2, '0');
+    const month = String(date.getMonth() + 1).padStart(2, '0'); // Months are 0-based
+    const year = date.getFullYear();
+    const hours = String(date.getHours()).padStart(2, '0');
+    const minutes = String(date.getMinutes()).padStart(2, '0');
+
+    startDateTime = `${day}/${month}/${year} ${hours}:${minutes}`;
+
+
+
+
+
+
 	//setting up severity
 	const SEVERITY ={
 		LOW: 12,
@@ -56,7 +76,7 @@
     		secondsEpoch += SEVERITY.MEDIUM * 3600;
   		}
 		else if (severity === SEVERITY.HIGH) {
-    		secondsEpoch = secondsEpoch+1200;
+    		secondsEpoch = secondsEpoch+4800;
   		}
   		// Return the formatted date-time string
   		return getFormattedDateFromTimestamp(secondsEpoch);
