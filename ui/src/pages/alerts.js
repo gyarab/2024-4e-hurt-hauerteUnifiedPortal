@@ -1217,7 +1217,7 @@ function renderAlert(alert, expanded=false, modulesOptionsAlertReq,
       }
                     <h3 class="title mt-3 mb-3"><strong>SLA</strong></h3>
                     <div class="container" style="display: flex;justify-content: center;">
-                        <div id="SLAcontainer"></div>
+                        <div class="SLAcontainer"></div>
                     </div>
                                    
                     </div>
@@ -1414,11 +1414,12 @@ async function updateAlerts(page, per_page, filters = {}, paging=false){
                                                modulesOptionsIocReq.data);
           alertElement.html(alertHtml);
           alertsContainer.append(alertElement);
-          // Dispatch a custom event when done:
-          document.dispatchEvent(new CustomEvent('alertRendered'));
-          console.log('alertRendered event dispatched');
+
       });
   }
+  // Dispatch a custom event when done:
+    document.dispatchEvent(new CustomEvent('alertRendered'));
+  console.log('alertRendered event dispatched');
 
   // Update the pagination links
   const currentPage = page;
