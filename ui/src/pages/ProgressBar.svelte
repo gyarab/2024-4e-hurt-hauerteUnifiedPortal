@@ -28,6 +28,12 @@ import { onDestroy } from 'svelte';
 				//console.log(currTimeEpoch);
 				//console.log(Math.floor((Date.now()) / (1000 * 60)) * 60);
 			  elapsed = currTimeEpoch - startTimeEpoch + oldElapsedTime;
+			  console.log("-----------");
+			  console.log("startTimeEpoch: "+startTimeEpoch);
+			  console.log("duration: "+duration);
+			  console.log("elapsed: "+elapsed);
+			  console.log("currentTimeEpoch: "+currTimeEpoch);
+			  console.log("-----------");
 			  if (elapsed > duration) {
 				  elapsed = duration
 				  clearInterval(interval)

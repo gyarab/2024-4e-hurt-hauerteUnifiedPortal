@@ -19,6 +19,8 @@
 
     const date = new Date(IRIStime);
 
+    date.setHours(date.getHours() + 1);
+
     // Get day, month, year, hours, and minutes with proper padding
     const day = String(date.getDate()).padStart(2, '0');
     const month = String(date.getMonth() + 1).padStart(2, '0'); // Months are 0-based
@@ -48,7 +50,7 @@
 	//setting up SLA params
 	const workingHours = {
     	start: 8, // 8:00 AM
-    	end: 21 // 8:00 PM
+    	end: 23 // 8:00 PM
   	};
 	const workingDays = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday'];
 	let result;
@@ -76,7 +78,7 @@
     		secondsEpoch += SEVERITY.MEDIUM * 3600;
   		}
 		else if (severity === SEVERITY.HIGH) {
-    		secondsEpoch = secondsEpoch+4800;
+    		secondsEpoch = secondsEpoch+1200;
   		}
   		// Return the formatted date-time string
   		return getFormattedDateFromTimestamp(secondsEpoch);
