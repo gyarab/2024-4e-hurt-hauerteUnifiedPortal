@@ -1026,7 +1026,7 @@ function renderAlert(alert, expanded=false, modulesOptionsAlertReq,
                             </button>
                         </div>
                       </div>` : ''}
-                      ${alert.alert_creation_time ? `<div class="row mt-2">
+                      ${alert.alert_creation_time ? `<div class="row mt-2 IRIScreationTime">
                         <div class="col-md-3"><b>IRIS Creation Time:</b></div>
                         <div class="col-md-9 copy-value">
                             ${formatTime(alert.alert_creation_time)} UTC
@@ -1328,6 +1328,8 @@ async function refreshAlert(alertId, alertData, expanded=false) {
     const alertElement = $(`#alertCard-${alertId}`);
     const alertHtml = renderAlert(alertData, expanded, modulesOptionsAlertReq.data, modulesOptionsIocReq.data);
     alertElement.replaceWith(alertHtml);
+    console.log(alertData.alert_creation_time);
+    document.dispatchEvent(new CustomEvent('alertRendered', { detail: { IRIStime: alertData.alert_creation_time }}));
 }
 
 async function fetchModulesOptionsAlert() {

@@ -41,15 +41,21 @@ import { onDestroy } from 'svelte';
 				  elapsed = $myStore;
 			  }
 
+			  /*
 			  console.log("-----------");
 			  console.log("startTimeEpoch: "+startTimeEpoch);
 			  console.log("duration: "+duration);
 			  console.log("elapsed: "+elapsed);
 			  console.log("currentTimeEpoch: "+currTimeEpoch);
 			  console.log("-----------");
+
+			   */
 			  if (elapsed > duration) {
 				  elapsed = duration
 				  clearInterval(interval)
+			  }
+			  if (elapsed < 0){
+				  currstate = MyState.NEW;
 			  }
 		  }
 	  }, 1000)
@@ -75,9 +81,16 @@ import { onDestroy } from 'svelte';
 
   function complete() {
 	  //elapsed = 0
+
 	  clearInterval(interval)
 	  currstate = MyState.PAUSED;
+	  if (elapsed < 0){
+		  elapsed = 0;
+	  }
 	  changeValue(elapsed);
+
+
+
 	  //turn the shit green
   }
 

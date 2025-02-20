@@ -51,7 +51,7 @@
 	//setting up SLA params
 	const workingHours = {
     	start: 8, // 8:00 AM
-    	end: 23 // 8:00 PM
+    	end: 21 // 8:00 PM
   	};
 	const workingDays = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday'];
 	let result;
