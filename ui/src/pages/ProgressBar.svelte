@@ -1,10 +1,16 @@
 <script lang="ts">
 import { onDestroy } from 'svelte';
+
+
+
+  export let myStore;
+
   const MyState ={
 		NEW: 0,
 	  	RUNNING: 1,
 	    PAUSED: 2,
   };
+
   let currstate = MyState.RUNNING;
   //let { startDateTime = "01/02/2025 14:30", endDateTime = "01/02/2025 14:31" } = $props();
   export let startDateTime = "01/02/2025 14:30";
@@ -19,6 +25,7 @@ import { onDestroy } from 'svelte';
   let currTimeEpoch = 0;
   let startTimeEpoch = getSecondsSinceEpoch(startDateTime);
   //let severity;
+
   function start() {
 	  interval = setInterval(() => {
 		  if(currstate === MyState.RUNNING) {
@@ -27,7 +34,13 @@ import { onDestroy } from 'svelte';
 			  //startTimeEpoch = getSecondsSinceEpoch(startDateTime);
 				//console.log(currTimeEpoch);
 				//console.log(Math.floor((Date.now()) / (1000 * 60)) * 60);
-			  elapsed = currTimeEpoch - startTimeEpoch + oldElapsedTime;
+			  if($myStore < 0){
+				  elapsed = currTimeEpoch - startTimeEpoch + oldElapsedTime;
+			  }
+			  else {
+				  elapsed = $myStore;
+			  }
+
 			  console.log("-----------");
 			  console.log("startTimeEpoch: "+startTimeEpoch);
 			  console.log("duration: "+duration);
@@ -41,6 +54,7 @@ import { onDestroy } from 'svelte';
 		  }
 	  }, 1000)
   }
+
   function getSecondsSinceEpoch(dateString) {
 	  // Split the input string into date and time parts
 	  const [datePart, timePart] = dateString.split(' ');
@@ -54,22 +68,31 @@ import { onDestroy } from 'svelte';
 	  const secondsSinceEpoch = Math.floor(date.getTime() / 1000);
 	  return secondsSinceEpoch;
   }
+
+  function changeValue(newValue) {
+	  $myStore = newValue;
+  }
+
   function complete() {
 	  //elapsed = 0
 	  clearInterval(interval)
 	  currstate = MyState.PAUSED;
+	  changeValue(elapsed);
 	  //turn the shit green
   }
+
   function pause() {
 	  currstate = MyState.PAUSED;
 	  console.log("Paused!");
 	  oldElapsedTime = elapsed;
   }
+
   function resume() {
 	  currstate = MyState.RUNNING;
 	  startTimeEpoch = (Math.floor((Date.now()) / (1000 * 60)) * 60);
 	  console.log("Runing!");
   }
+
   /*
   $effect(() => {
 	  if (!duration) return
@@ -147,3 +170,5 @@ import { onDestroy } from 'svelte';
 	<button on:click={resume}>Resume</button>
 	<button on:click={complete}>Complete</button>
 </div>
+
+<p>Local store: {$myStore}</p>
