@@ -4,6 +4,7 @@ export let app; // Declare at the top level
 
 document.addEventListener('alertRendered', (event) => {
   console.log('alertRendered event received');
+  console.log("alertData22 "+event.detail.alertStatusID);
   const containers = document.querySelectorAll('.SLAcontainer');
   console.log(containers);
   if (containers) {

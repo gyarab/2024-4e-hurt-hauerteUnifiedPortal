@@ -1332,8 +1332,8 @@ async function refreshAlert(alertId, alertData, expanded=false) {
     const alertElement = $(`#alertCard-${alertId}`);
     const alertHtml = renderAlert(alertData, expanded, modulesOptionsAlertReq.data, modulesOptionsIocReq.data);
     alertElement.replaceWith(alertHtml);
-    console.log(alertData.alert_creation_time);
-    document.dispatchEvent(new CustomEvent('alertRendered', { detail: { IRIStime: alertData.alert_creation_time }}));
+    //console.log(alertData);
+    document.dispatchEvent(new CustomEvent('alertRendered', { detail: { IRIStime: alertData.alert_creation_time, alertStatusID: alertData.alert_status_id }}));
 }
 
 async function fetchModulesOptionsAlert() {
@@ -1417,7 +1417,9 @@ async function updateAlerts(page, per_page, filters = {}, paging=false){
           alertsContainer.append(alertElement);
           console.log("alert Tile: "+formatTime(alert.alert_creation_time));
             // Dispatch a custom event when done:
-            document.dispatchEvent(new CustomEvent('alertRendered', { detail: { IRIStime: alert.alert_creation_time }}));
+            //document.dispatchEvent(new CustomEvent('alertRendered', { detail: { IRIStime: alert.alert_creation_time }}));
+            document.dispatchEvent(new CustomEvent('alertRendered', { detail: { IRIStime: alert.alert_creation_time, alertStatusID: alert.alert_status_id }}));
+
       });
   }
 
