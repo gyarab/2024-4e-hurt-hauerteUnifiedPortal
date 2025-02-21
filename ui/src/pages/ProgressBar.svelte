@@ -26,6 +26,7 @@ import { onDestroy } from 'svelte';
   let oldElapsedTime = 0;
   let currTimeEpoch = 0;
   let startTimeEpoch = getSecondsSinceEpoch(startDateTime);
+  let SLAbreached = false;
   //let severity;
 
   function start() {
@@ -56,6 +57,7 @@ import { onDestroy } from 'svelte';
 			  if (elapsed > duration) {
 				  elapsed = duration
 				  clearInterval(interval)
+				  SLAbreached = true;
 			  }
 			  if (elapsed < 0){
 				  //currstate = MyState.NEW;
@@ -196,8 +198,7 @@ import { onDestroy } from 'svelte';
 			</div>
 
 				<label class="row col-md-12" style="display: flex;justify-content: center;">
-
-					<progress class:completed={currstate === MyState.PAUSED} max={duration} value={elapsed}></progress>
+					<progress class:completed={currstate === MyState.PAUSED} class:breached={SLAbreached} max={duration} value={elapsed}></progress>
 				</label>
 
 
@@ -208,7 +209,7 @@ import { onDestroy } from 'svelte';
 	</div>
 
     {#if duration === elapsed}
-        <p>SLA breached!</p>
+        <p class="row col-md-12" style="display: flex;justify-content: center;"><strong>SLA breached!</strong></p>
 	{/if}
 	<button on:click={pause}>Pause</button>
 	<button on:click={resume}>Resume</button>
@@ -251,6 +252,10 @@ import { onDestroy } from 'svelte';
   /* When complete, change the progress bar's value color */
   .completed::-webkit-progress-value {
     background-color: green;
+  }
+
+  .breached::-webkit-progress-value {
+    background-color: red;
   }
 
   progress::-moz-progress-bar {
