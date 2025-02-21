@@ -17,7 +17,7 @@
 
 	//startDateTime = "06/02/2025 20:58";
     export let IRIStime;
-    console.log("IRIStimeFromSvelte: "+IRIStime);
+
 
     const date = new Date(IRIStime);
 
@@ -34,6 +34,7 @@
 
 
    //const myStore = createPersistentStore(startDateTime, -1);
+    export let alertStatusID;
 
     const myStore = createPersistentStore(startDateTime, {
         elapsed_saved: -1,
@@ -189,10 +190,10 @@
   <p>Input Date and Time: {startDateTime}</p>
   {#if result === true} <!-- if within working hours -->
     <p>The provided time is within working hours.</p>
-	  <ProgressBar startDateTime={startDateTime} {endDateTime} {myStore}/>
+	  <ProgressBar startDateTime={startDateTime} {endDateTime} {myStore} {alertStatusID}/>
   {:else} <!-- if not within working hours - recompute endDateTime-->
     <p>The closest working time is: {result}</p>
-	  <ProgressBar startDateTime={result} endDateTime={computedValue} {myStore}/>
+	  <ProgressBar startDateTime={result} endDateTime={computedValue} {myStore} {alertStatusID}/>
   {/if}
 
 </div>

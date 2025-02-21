@@ -1,9 +1,10 @@
 <script lang="ts">
-import { onDestroy } from 'svelte';
+	import {onDestroy, tick} from 'svelte';
 
 
 
   export let myStore;
+  export let alertStatusID;
 
   //$: ({ elapsed_saved, state } = $myStore);
 
@@ -26,10 +27,10 @@ import { onDestroy } from 'svelte';
   let oldElapsedTime = 0;
   let currTimeEpoch = 0;
   let startTimeEpoch = getSecondsSinceEpoch(startDateTime);
-  let SLAbreached = false;
+  $: SLAbreached = false;
   //let severity;
 
-  function start() {
+	function start() {
 	  interval = setInterval(() => {
 		  if(currstate === MyState.RUNNING) {
 			  //calculate curr time
@@ -61,6 +62,10 @@ import { onDestroy } from 'svelte';
 			  }
 			  if (elapsed < 0){
 				  //currstate = MyState.NEW;
+			  }
+			  if (alertStatusID === 4){
+		  		//await tick();
+		  		complete();
 			  }
 		  }
 	  }, 1000)
