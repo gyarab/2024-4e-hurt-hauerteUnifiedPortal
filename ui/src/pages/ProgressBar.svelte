@@ -166,14 +166,26 @@ import { onDestroy } from 'svelte';
 </script>
 
 <div class="grid-gap">
-	<div>
-      <p>{startDateTime} - {endDateTime}</p>
-		<label>
-			<span>Elapsed time:</span>
-			<progress max={duration} value={elapsed}></progress>
-		</label>
+	<div class="progress-container col-md-12" style="display: flex;justify-content: center;">
+		<div class="col-md-12" style="padding-top: 5px;">
+			<div class="row col-md-12" style="display: flex;justify-content: center;">
+      			<p>{startDateTime} - {endDateTime}</p>
+			</div>
 
-		<div>{elapsed.toFixed(1)}s</div>
+			<div class="row col-md-12" style="display: flex;justify-content: center; padding-bottom: 5px;">
+				<span>Elapsed time:</span>
+			</div>
+
+				<label class="row col-md-12" style="display: flex;justify-content: center;">
+
+					<progress class:completed={currstate === MyState.PAUSED} max={duration} value={elapsed}></progress>
+				</label>
+
+
+			<div class="row col-md-12" style="display: flex;justify-content: center;">
+				<p>{elapsed.toFixed(1)}s</p>
+			</div>
+		</div>
 	</div>
 
     {#if duration === elapsed}
@@ -185,3 +197,44 @@ import { onDestroy } from 'svelte';
 </div>
 
 <p>Local store: {$myStore}</p>
+
+<style>
+	.progress-container {
+    width: 100%;
+    padding: 5px;
+    border: 2px solid grey;
+    border-radius: 10px;
+    background-color: #f3f3f3;
+  }
+
+  progress {
+    width: 90%;
+    height: 10px;
+    -webkit-appearance: none;
+    appearance: none;
+  }
+
+  p {
+	   height: 10px;
+  }
+
+  progress::-webkit-progress-bar {
+    background-color: #ffffff;
+    border-radius: 10px;
+  }
+
+  progress::-webkit-progress-value {
+    background-color: #00b5f1;
+    border-radius: 10px;
+  }
+
+  /* When complete, change the progress bar's value color */
+  .completed::-webkit-progress-value {
+    background-color: green;
+  }
+
+  progress::-moz-progress-bar {
+    background-color: lightblue;
+    border-radius: 10px;
+  }
+</style>

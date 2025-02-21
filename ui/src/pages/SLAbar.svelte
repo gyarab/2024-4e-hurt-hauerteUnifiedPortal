@@ -181,7 +181,6 @@
 </script>
 
 <div class="grid-gap">
-	<main>
   <p>Input Date and Time: {startDateTime}</p>
   {#if result === true} <!-- if within working hours -->
     <p>The provided time is within working hours.</p>
@@ -190,7 +189,5 @@
     <p>The closest working time is: {result}</p>
 	  <ProgressBar startDateTime={result} endDateTime={computedValue} {myStore}/>
   {/if}
-</main>
-
 
 </div>

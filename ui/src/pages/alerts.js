@@ -1026,7 +1026,7 @@ function renderAlert(alert, expanded=false, modulesOptionsAlertReq,
                             </button>
                         </div>
                       </div>` : ''}
-                      ${alert.alert_creation_time ? `<div class="row mt-2 IRIScreationTime">
+                      ${alert.alert_creation_time ? `<div class="row mt-2">
                         <div class="col-md-3"><b>IRIS Creation Time:</b></div>
                         <div class="col-md-9 copy-value">
                             ${formatTime(alert.alert_creation_time)} UTC
@@ -1037,6 +1037,14 @@ function renderAlert(alert, expanded=false, modulesOptionsAlertReq,
                       </div>` : ''}
                     
                     <div class="separator-solid"></div>
+                    
+                    <h3 class="title mt-3 mb-3"><strong>SLA</strong></h3>
+                    <div class="container">
+                        <div class="SLAcontainer"></div>
+                    </div>
+                    
+                     <div class="separator-solid"></div>
+                    
                     <h3 class="title mb-3"><strong>Alert note</strong></h3>
                     <pre id=alertNote-${alert.alert_id}>${alert.alert_note}</pre>
                     
@@ -1215,10 +1223,6 @@ function renderAlert(alert, expanded=false, modulesOptionsAlertReq,
                            </div>`
               : ""
       }
-                    <h3 class="title mt-3 mb-3"><strong>SLA</strong></h3>
-                    <div class="container" style="display: flex;justify-content: center;">
-                        <div class="SLAcontainer"></div>
-                    </div>
                     
                     </div>
                   </div>
