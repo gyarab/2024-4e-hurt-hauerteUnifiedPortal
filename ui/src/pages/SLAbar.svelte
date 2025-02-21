@@ -33,7 +33,12 @@
     startDateTime = `${day}/${month}/${year} ${hours}:${minutes}`;
 
 
-   const myStore = createPersistentStore(startDateTime, -1);
+   //const myStore = createPersistentStore(startDateTime, -1);
+
+    const myStore = createPersistentStore(startDateTime, {
+        elapsed_saved: -1,
+        state: 1 //state RUNNING
+    });
 
 
 	//setting up severity

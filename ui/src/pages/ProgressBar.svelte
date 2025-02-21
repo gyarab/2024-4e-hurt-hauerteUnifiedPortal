@@ -5,19 +5,21 @@ import { onDestroy } from 'svelte';
 
   export let myStore;
 
+  //$: ({ elapsed_saved, state } = $myStore);
+
   const MyState ={
 		NEW: 0,
 	  	RUNNING: 1,
 	    PAUSED: 2,
   };
 
-  let currstate = MyState.RUNNING;
+  let currstate = $myStore.state;
   //let { startDateTime = "01/02/2025 14:30", endDateTime = "01/02/2025 14:31" } = $props();
   export let startDateTime = "01/02/2025 14:30";
   export let endDateTime = "01/02/2025 14:30";
   let timecomputed = calculateDuration(); //calculate duration betwwen two timestamps in seconds
   //let elapsed = $state(0);
-  $: elapsed = 0;
+  $: elapsed = $myStore.elapsed_saved;
   //let duration = $state(timecomputed);
   $: duration = timecomputed;
   let interval: number
@@ -34,11 +36,12 @@ import { onDestroy } from 'svelte';
 			  //startTimeEpoch = getSecondsSinceEpoch(startDateTime);
 				//console.log(currTimeEpoch);
 				//console.log(Math.floor((Date.now()) / (1000 * 60)) * 60);
-			  if($myStore < 0){
+			  if($myStore.elapsed_saved < 0){
 				  elapsed = currTimeEpoch - startTimeEpoch + oldElapsedTime;
+				  console.log("elapsed: "+elapsed);
 			  }
 			  else {
-				  elapsed = $myStore;
+				  elapsed = $myStore.elapsed_saved;
 			  }
 
 			  /*
@@ -55,7 +58,7 @@ import { onDestroy } from 'svelte';
 				  clearInterval(interval)
 			  }
 			  if (elapsed < 0){
-				  currstate = MyState.NEW;
+				  //currstate = MyState.NEW;
 			  }
 		  }
 	  }, 1000)
@@ -79,6 +82,18 @@ import { onDestroy } from 'svelte';
 	  $myStore = newValue;
   }
 
+
+  // Alternatively, if you want to set a property to a new absolute value:
+  function setValue(property, newValue) {
+    myStore.update(current => ({
+      ...current,
+      [property]: newValue
+    }));
+  }
+
+
+
+
   function complete() {
 	  //elapsed = 0
 
@@ -87,7 +102,11 @@ import { onDestroy } from 'svelte';
 	  if (elapsed < 0){
 		  elapsed = 0;
 	  }
-	  changeValue(elapsed);
+	  //changeValue(elapsed);
+	  console.log("elapsedFromComplete "+elapsed);
+	  setValue('elapsed_saved', elapsed);
+	  setValue('state', 2);
+
 
 
 
@@ -196,7 +215,8 @@ import { onDestroy } from 'svelte';
 	<button on:click={complete}>Complete</button>
 </div>
 
-<p>Local store: {$myStore}</p>
+<p>Local store elapsed_saved: {$myStore.elapsed_saved}</p>
+<p>Local store state: {$myStore.state}</p>
 
 <style>
 	.progress-container {
