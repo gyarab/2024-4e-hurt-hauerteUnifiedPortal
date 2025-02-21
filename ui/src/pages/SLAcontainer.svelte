@@ -3,10 +3,12 @@
     let isVisible = true;
 	export let IRIStime;
 	export let alertStatusID;
+	export let alertSevID;
+
 </script>
 
 <div class="grid-gap">
 		<div style:display={isVisible ? 'block' : 'none'}>
-			<SLAbar {IRIStime} {alertStatusID}/>
+			<SLAbar {IRIStime} {alertStatusID} {alertSevID}/>
 		</div>
 </div>

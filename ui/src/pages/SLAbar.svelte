@@ -35,11 +35,14 @@
 
    //const myStore = createPersistentStore(startDateTime, -1);
     export let alertStatusID;
+    export let alertSevID;
 
     const myStore = createPersistentStore(startDateTime, {
         elapsed_saved: -1,
         state: 1 //state RUNNING
     });
+
+
 
 
 	//setting up severity
@@ -49,10 +52,10 @@
 		MEDIUM: 6,
 		HIGH: 1
   	};
-	let severity = SEVERITY.HIGH;
+
 	//setting up endDateTime value
 	let endDateTime = "01/02/2025 22:31"; //default value
-	endDateTime = calculateEndDateTime(startDateTime, severity);
+	endDateTime = calculateEndDateTime(startDateTime, alertSevID);
 	console.log("EndTimeeeee:"+endDateTime);
 	//setting up SLA params
 	const workingHours = {
@@ -67,7 +70,7 @@
 	console.log("result: "+result);
 	let computedValue;
 	if(result !== true  ){
-		computedValue = calculateEndDateTime(result, severity);
+		computedValue = calculateEndDateTime(result, alertSevID);
 		console.log("computed value: "+computedValue)
 	}
 	//input in formated timestamp
@@ -75,18 +78,27 @@
     function calculateEndDateTime(startDateTime, severity) {
   		let secondsEpoch = getSecondsSinceEpoch(startDateTime);
   		// Add the appropriate time in seconds based on severity
-  		if (severity === SEVERITY.LOW) {
+        //1 - Medium
+        //2 - Unspecified
+        //3 - Informational
+        //4 - Low
+        //5 - High
+        //6 - Critical
+  		if (severity === 4) { //Low
     		secondsEpoch += SEVERITY.LOW * 3600;
   		}
-		else if (severity === SEVERITY.INFORMATIONAL) {
+		else if (severity === 3) {
     		secondsEpoch += 24 * 3600;
   		}
-		else if (severity === SEVERITY.MEDIUM) {
+		else if (severity === 1) { //medium
     		secondsEpoch += SEVERITY.MEDIUM * 3600;
   		}
-		else if (severity === SEVERITY.HIGH) {
+		else if (severity === 5) {
     		secondsEpoch = secondsEpoch+1200;
   		}
+        else {
+            secondsEpoch += 12 * 3600;
+        }
   		// Return the formatted date-time string
   		return getFormattedDateFromTimestamp(secondsEpoch);
 	}

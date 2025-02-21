@@ -1333,7 +1333,16 @@ async function refreshAlert(alertId, alertData, expanded=false) {
     const alertHtml = renderAlert(alertData, expanded, modulesOptionsAlertReq.data, modulesOptionsIocReq.data);
     alertElement.replaceWith(alertHtml);
     //console.log(alertData);
-    document.dispatchEvent(new CustomEvent('alertRendered', { detail: { IRIStime: alertData.alert_creation_time, alertStatusID: alertData.alert_status_id }}));
+    //document.dispatchEvent(new CustomEvent('alertRendered', { detail: { IRIStime: alertData.alert_creation_time, alertStatusID: alertData.alert_status_id }}));
+
+    document.dispatchEvent(new CustomEvent('alertRendered', {
+                detail: {
+                    IRIStime: alertData.alert_creation_time,
+                    alertStatusID: alertData.alert_status_id,
+                    alertSevID: alertData.severity.severity_id
+                }
+            }));
+
 }
 
 async function fetchModulesOptionsAlert() {
@@ -1415,11 +1424,15 @@ async function updateAlerts(page, per_page, filters = {}, paging=false){
                                                modulesOptionsIocReq.data);
           alertElement.html(alertHtml);
           alertsContainer.append(alertElement);
-          console.log("alert Tile: "+formatTime(alert.alert_creation_time));
+          console.log(alert);
             // Dispatch a custom event when done:
-            //document.dispatchEvent(new CustomEvent('alertRendered', { detail: { IRIStime: alert.alert_creation_time }}));
-            document.dispatchEvent(new CustomEvent('alertRendered', { detail: { IRIStime: alert.alert_creation_time, alertStatusID: alert.alert_status_id }}));
-
+            document.dispatchEvent(new CustomEvent('alertRendered', {
+                detail: {
+                    IRIStime: alert.alert_creation_time,
+                    alertStatusID: alert.alert_status_id,
+                    alertSevID: alert.severity.severity_id
+                }
+            }));
       });
   }
 

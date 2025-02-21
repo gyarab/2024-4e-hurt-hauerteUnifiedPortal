@@ -18,7 +18,8 @@ document.addEventListener('alertRendered', (event) => {
         target: container,
         props: {
           IRIStime: event.detail.IRIStime,
-          alertStatusID: event.detail.alertStatusID
+          alertStatusID: event.detail.alertStatusID,
+          alertSevID: event.detail.alertSevID
         }
       });
       console.log('Svelte component mounted:', app);
