@@ -31,6 +31,14 @@ from app.models.authorization import Permissions
 from app.blueprints.responses import response_error
 from app.blueprints.access_controls import ac_requires
 
+from app.datamgmt.client.client_db import get_client, get_client_list
+from app.forms import AddCustomerForm
+
+from app.datamgmt.client.client_db import get_clients_sla
+from app.blueprints.responses import response_success
+
+from app.blueprints.access_controls import ac_api_requires
+
 alerts_blueprint = Blueprint(
     'alerts',
     __name__,
@@ -56,6 +64,18 @@ def alerts_list_view_route(caseid, url_redir) -> Union[str, Response]:
     form = FlaskForm()
 
     return render_template('alerts.html', caseid=caseid, form=form)
+
+#later move this to source/app/blueprints/rest/alerts_routes.py
+@alerts_blueprint.route('/alerts/api/get_clients_sla_api', methods=['GET'])
+@ac_api_requires()
+def get_clients_sla_api():
+    rows= get_clients_sla()
+    customers = [dict(row._mapping) for row in rows]
+    output = {
+        "customers_sla": customers
+    }
+
+    return response_success(data=output)
 
 
 @alerts_blueprint.route('/alerts/<int:cur_id>/comments/modal', methods=['GET'])

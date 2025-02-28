@@ -1,6 +1,6 @@
 <script lang="ts">
     import ProgressBar from "./ProgressBar.svelte";
-     import { createPersistentStore } from './persistentStore.js';
+    import { createPersistentStore } from './persistentStore.js';
 
 	//setting up startDateTime value
 	let startDateTime = "01/02/2025 14:30";//defalut value
@@ -36,12 +36,51 @@
    //const myStore = createPersistentStore(startDateTime, -1);
     export let alertStatusID;
     export let alertSevID;
+    export let SLA;
+    export let alertCustomerID;
 
     const myStore = createPersistentStore(startDateTime, {
         elapsed_saved: -1,
         state: 1 //state RUNNING
     });
 
+    console.log(`MUJ START DATE TIME JE ${startDateTime}\nMUJ SLA IG TYVOLE ${SLA} MUJ CLIENT ID ${alertCustomerID}`);
+    const parts = SLA.split(':');
+
+    //const workingDays2 = SLA;
+   // const workingDays2 = parts[0].split(',').map(day => day.trim());
+
+    const clients = JSON.parse(SLA);
+    const resultIG = clients.find(client => client.client_id === alertCustomerID)?.sla;
+
+    // Split the SLA into components
+	let workingDays2 = [];
+	let startHour = 8;
+    let endHour = 20;
+
+    if (resultIG.includes(':')) {
+  		const [days, startTime, endTime] = resultIG.split(':');
+
+  		// Process working days
+  		workingDays2 = days.split(', ').map(day => day.trim());
+
+  		// Convert times to numbers
+  		startHour = parseInt(startTime, 10);
+  		endHour = parseInt(endTime, 10);
+	} else {
+  		// Handle case with no times (just days)
+  		workingDays2 = resultIG.split(', ').map(day => day.trim());
+	}
+
+
+
+
+
+
+    const start = parseInt(parts[1], 10);
+    const end = parseInt(parts[2], 10);
+    console.log("startTime", startHour);       // 8
+    console.log("endTime", endHour);
 
 
 
@@ -59,10 +98,50 @@
 	console.log("EndTimeeeee:"+endDateTime);
 	//setting up SLA params
 	const workingHours = {
-    	start: 8, // 8:00 AM
-    	end: 21 // 8:00 PM
+    	start: startHour, // 8:00 AM
+    	end: endHour // 8:00 PM
   	};
-	const workingDays = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday'];
+
+	//const workingDays = ['Monday', 'Tuesday', 'Wednesday', 'Thursday'];
+    const workingDays = workingDays2;
+
+     console.log("WORKING DAYS", workingDays2);
+     console.log("MY CLIENT ID", alertCustomerID);
+     console.log("MUY ALERT SEV", alertSevID);
+
+
+
+
+     /*
+    const clients = JSON.parse(SLA);
+    const resultIG = clients.find(client => client.client_id === alertCustomerID)?.sla;
+
+    // Split the SLA into components
+	let workingDays = [];
+	let startHour, endHour;
+
+	if (resultIG.includes(':')) {
+  		const [days, startTime, endTime] = resultIG.split(':');
+
+  		// Process working days
+  		workingDays = days.split(', ').map(day => day.trim());
+
+  		// Convert times to numbers
+  		startHour = parseInt(startTime, 10);
+  		endHour = parseInt(endTime, 10);
+	} else {
+  		// Handle case with no times (just days)
+  		workingDays = resultIG.split(', ').map(day => day.trim());
+	}
+¨
+      */
+
+
+
+
+
+
+
 	let result;
 	result = getClosestWorkingTime(startDateTime);
 	console.log("startDateTime: "+startDateTime);

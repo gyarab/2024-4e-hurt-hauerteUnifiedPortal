@@ -5,6 +5,10 @@
 
   export let myStore;
   export let alertStatusID;
+  //export let SLA;
+  //export let alertCustomerID;
+
+
 
   //$: ({ elapsed_saved, state } = $myStore);
 

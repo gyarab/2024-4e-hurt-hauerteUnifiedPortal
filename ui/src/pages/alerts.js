@@ -1315,6 +1315,7 @@ async function refreshAlert(alertId, alertData, expanded=false) {
         }
         alertData = alertDataReq.data;
     }
+    const SLAdata = await fetchSLAdata();
 
       if (modulesOptionsAlertReq === null) {
     modulesOptionsAlertReq = await fetchModulesOptionsAlert();
@@ -1332,18 +1333,76 @@ async function refreshAlert(alertId, alertData, expanded=false) {
     const alertElement = $(`#alertCard-${alertId}`);
     const alertHtml = renderAlert(alertData, expanded, modulesOptionsAlertReq.data, modulesOptionsIocReq.data);
     alertElement.replaceWith(alertHtml);
-    //console.log(alertData);
+
+    //const SLAelement = $(`#SLAelement`).text();
+    console.log("SLA ELEMENT IS HERE! ");
+    console.log(alertData.alert_customer_id);
     //document.dispatchEvent(new CustomEvent('alertRendered', { detail: { IRIStime: alertData.alert_creation_time, alertStatusID: alertData.alert_status_id }}));
 
+    //const response = get_request_api('/alerts/api/get_clients_sla_api');
+    //const SLAdata = response.responseJSON.data.customers_sla;
+
     document.dispatchEvent(new CustomEvent('alertRendered', {
-                detail: {
-                    IRIStime: alertData.alert_creation_time,
-                    alertStatusID: alertData.alert_status_id,
-                    alertSevID: alertData.severity.severity_id
-                }
-            }));
+        detail: {
+            IRIStime: alertData.alert_creation_time,
+            alertStatusID: alertData.alert_status_id,
+            alertSevID: alertData.severity.severity_id,
+            alertCustomerID: alertData.alert_customer_id,
+            SLA: SLAdata
+        }
+    }));
+
 
 }
+
+async function fetchSLAdata() {
+
+    try {
+        const response = await fetch('alerts/api/get_clients_sla_api');
+        const data = await response.json();
+
+        // Declare the variable properly
+        const customersSla = data.data.customers_sla;
+        console.log('Customers SLA:', customersSla);
+
+        // Convert the entire array to a single JSON string
+        const jsonString = JSON.stringify(customersSla);
+        console.log("JSON string:", jsonString);
+
+        return jsonString;
+    } catch (error) {
+        console.error('Error fetching data:', error);
+        throw error; // Optionally re-throw the error after logging it
+    }
+
+
+
+
+
+
+
+    /*
+    fetch('alerts/api/get_clients_sla_api')
+        .then(response => response.json())
+        .then(data => {
+            // Assuming the API returns an object with a "data" field that contains "customers_sla"
+            customersSla = data.data.customers_sla;
+            console.log('Customers SLA:', customersSla);
+
+            // Option 1: Convert the entire array to a single JSON string
+            const jsonString = JSON.stringify(customersSla);
+            console.log("JSON string:", jsonString);
+
+        })
+        .catch(error => {
+            console.error('Error fetching data:', error);
+        });
+
+        return await jsonString;
+
+     */
+    }
+
 
 async function fetchModulesOptionsAlert() {
     const response = get_request_api('/dim/hooks/options/alert/list');
@@ -1398,6 +1457,10 @@ async function updateAlerts(page, per_page, filters = {}, paging=false){
     }
   }
 
+
+  const SLAdata = await fetchSLAdata();
+
+
   // Check if the selection mode is active
    const selectionModeActive = $('body').hasClass('selection-mode');
    selectionModeActive ? $('body').removeClass('selection-mode') : '';
@@ -1425,14 +1488,61 @@ async function updateAlerts(page, per_page, filters = {}, paging=false){
           alertElement.html(alertHtml);
           alertsContainer.append(alertElement);
           console.log(alert);
-            // Dispatch a custom event when done:
-            document.dispatchEvent(new CustomEvent('alertRendered', {
+          const jsonString = "";
+
+          document.dispatchEvent(new CustomEvent('alertRendered', {
                 detail: {
                     IRIStime: alert.alert_creation_time,
                     alertStatusID: alert.alert_status_id,
-                    alertSevID: alert.severity.severity_id
+                    alertSevID: alert.severity.severity_id,
+                    alertCustomerID: alert.alert_customer_id,
+                    SLA: SLAdata
                 }
             }));
+
+
+
+            // Dispatch a custom event when done:
+          //const SLAelement = $(`#SLAelement`).text();
+          /*
+
+          let customersSla;
+          let clientString = "";
+          fetch('alerts/api/get_clients_sla_api')
+            .then(response => response.json())
+            .then(data => {
+                customersSla = data.data.customers_sla;
+                console.log('Customers SLA:', customersSla);
+
+                const jsonString = JSON.stringify(customersSla);
+                console.log("JSON string:", jsonString);
+
+                // Option 2: Convert each object to a custom formatted string and print them individually
+
+                customersSla.forEach(client => {
+                    if( client.client_id === alert.alert_customer_id){
+                        clientString = `${client.sla}`;
+                    }
+                });
+                console.log(`cleintString ${clientString} clientID ${alert.alert_customer_id}`);
+
+                document.dispatchEvent(new CustomEvent('alertRendered', {
+                detail: {
+                    IRIStime: alert.alert_creation_time,
+                    alertStatusID: alert.alert_status_id,
+                    alertSevID: alert.severity.severity_id,
+                    alertCustomerID: alert.alert_customer_id,
+                    SLA: jsonString
+                }
+            }));
+
+            })
+            .catch(error => {
+                console.error('Error fetching data:', error);
+            });
+
+           */
+
       });
   }
 

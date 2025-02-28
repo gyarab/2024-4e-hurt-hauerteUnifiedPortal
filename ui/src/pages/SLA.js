@@ -4,7 +4,8 @@ export let app; // Declare at the top level
 
 document.addEventListener('alertRendered', (event) => {
   console.log('alertRendered event received');
-  console.log("alertData22 "+event.detail.alertStatusID);
+  console.log("SLA ELEMENT FROM SLA.JS !!! ", event.detail.alertCustomerID);
+  //console.log(event.detail.alertCustomerID);
   const containers = document.querySelectorAll('.SLAcontainer');
   console.log(containers);
   if (containers) {
@@ -19,7 +20,9 @@ document.addEventListener('alertRendered', (event) => {
         props: {
           IRIStime: event.detail.IRIStime,
           alertStatusID: event.detail.alertStatusID,
-          alertSevID: event.detail.alertSevID
+          alertSevID: event.detail.alertSevID,
+          alertCustomerID: event.detail.alertCustomerID,
+          SLA: event.detail.SLA
         }
       });
       console.log('Svelte component mounted:', app);
