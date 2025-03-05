@@ -22,7 +22,8 @@ document.addEventListener('alertRendered', (event) => {
           alertStatusID: event.detail.alertStatusID,
           alertSevID: event.detail.alertSevID,
           alertCustomerID: event.detail.alertCustomerID,
-          SLA: event.detail.SLA
+          SLA: event.detail.SLA,
+          alertID: event.detail.alertID
         }
       });
       console.log('Svelte component mounted:', app);

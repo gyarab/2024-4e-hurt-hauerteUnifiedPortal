@@ -6,6 +6,7 @@
 	export let alertSevID;
 	export let alertCustomerID;
 	export let SLA;
+	export let alertID;
 
 	console.log("SLA FROM SLACOntainer", SLA);
 
@@ -13,6 +14,6 @@
 
 <div class="grid-gap">
 		<div style:display={isVisible ? 'block' : 'none'}>
-			<SLAbar {IRIStime} {alertStatusID} {alertSevID} {SLA} {alertCustomerID}/>
+			<SLAbar {IRIStime} {alertStatusID} {alertSevID} {SLA} {alertCustomerID} {alertID}/>
 		</div>
 </div>

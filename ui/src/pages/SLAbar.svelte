@@ -38,13 +38,20 @@
     export let alertSevID;
     export let SLA;
     export let alertCustomerID;
+    export let alertID;
 
+    //TODO
+    //create a new column in table "alerts" called "SLAcompletedTime"
+    // with initial value -1 (or null?)
+    // here query if the alert with alert id alertID is NULL
+    // if yes set state to  1 //FR??
     const myStore = createPersistentStore(startDateTime, {
         elapsed_saved: -1,
         state: 1 //state RUNNING
     });
 
-    console.log(`MUJ START DATE TIME JE ${startDateTime}\nMUJ SLA IG TYVOLE ${SLA} MUJ CLIENT ID ${alertCustomerID}`);
+    console.log(`MUJ START DATE TIME JE ${startDateTime}\nMUJ SLA IG TYVOLE ${SLA} MUJ ALERT ID ${alertID}`);
+    //console.log(alertID);
     const parts = SLA.split(':');
 
     //const workingDays2 = SLA;

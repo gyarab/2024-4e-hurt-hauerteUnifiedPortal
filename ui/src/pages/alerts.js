@@ -1348,7 +1348,8 @@ async function refreshAlert(alertId, alertData, expanded=false) {
             alertStatusID: alertData.alert_status_id,
             alertSevID: alertData.severity.severity_id,
             alertCustomerID: alertData.alert_customer_id,
-            SLA: SLAdata
+            SLA: SLAdata,
+            alertID: alertData.alert_id
         }
     }));
 

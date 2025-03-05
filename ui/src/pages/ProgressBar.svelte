@@ -18,13 +18,17 @@
 	    PAUSED: 2,
   };
 
+	//TODO
+	//query the db for the current state of "SLAcompletedTime" column
+	//based on the alertID
+	// if NULL set state to running //FR??
   let currstate = $myStore.state;
   //let { startDateTime = "01/02/2025 14:30", endDateTime = "01/02/2025 14:31" } = $props();
   export let startDateTime = "01/02/2025 14:30";
   export let endDateTime = "01/02/2025 14:30";
   let timecomputed = calculateDuration(); //calculate duration betwwen two timestamps in seconds
   //let elapsed = $state(0);
-  $: elapsed = $myStore.elapsed_saved;
+  $: elapsed = $myStore.elapsed_saved; //TODO query the db for the current state of "SLAcompletedTime" column
   //let duration = $state(timecomputed);
   $: duration = timecomputed;
   let interval: number
@@ -42,12 +46,12 @@
 			  //startTimeEpoch = getSecondsSinceEpoch(startDateTime);
 				//console.log(currTimeEpoch);
 				//console.log(Math.floor((Date.now()) / (1000 * 60)) * 60);
-			  if($myStore.elapsed_saved < 0){
+			  if($myStore.elapsed_saved < 0){ //TODO query the db for the current state of "SLAcompletedTime" column
 				  elapsed = currTimeEpoch - startTimeEpoch + oldElapsedTime;
 				  console.log("elapsed: "+elapsed);
 			  }
-			  else {
-				  elapsed = $myStore.elapsed_saved;
+			  else { //ig call the fetch funcitons from here???
+				  elapsed = $myStore.elapsed_saved; //TODO query the db for the current state of "SLAcompletedTime" column
 			  }
 
 			  /*
@@ -115,7 +119,7 @@
 	  }
 	  //changeValue(elapsed);
 	  console.log("elapsedFromComplete "+elapsed);
-	  setValue('elapsed_saved', elapsed);
+	  setValue('elapsed_saved', elapsed);// TODO write into db for current state elapsed to the "SLAcompletedTime" column
 	  setValue('state', 2);
 
 
