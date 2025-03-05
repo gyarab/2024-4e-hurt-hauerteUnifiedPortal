@@ -1,6 +1,15 @@
 <script lang="ts">
     import ProgressBar from "./ProgressBar.svelte";
     import { createPersistentStore } from './persistentStore.js';
+    import { onMount } from 'svelte';
+
+    let dbData;
+
+    onMount(async () => {
+        console.log("I JUST MOUNTED AGAIN MOTHERFUCKER");
+        dbData = await fetchDbData();
+        console.log("DB_Data: ", dbData);
+    });
 
 	//setting up startDateTime value
 	let startDateTime = "01/02/2025 14:30";//defalut value
@@ -52,6 +61,35 @@
 
     console.log(`MUJ START DATE TIME JE ${startDateTime}\nMUJ SLA IG TYVOLE ${SLA} MUJ ALERT ID ${alertID}`);
     //console.log(alertID);
+
+
+    //this sould ectually fetch for column "SLAcompleted"
+    //it will either have -1 or other int value for SLA completed seconds number
+    async function fetchDbData() {
+        try {
+            const response = await fetch('alerts/api/get_clients_sla_api');
+            const data = await response.json();
+
+            // Declare the variable properly
+            const customersSla = data.data.customers_sla;
+            console.log('Customers SLA:', customersSla);
+
+            // Convert the entire array to a single JSON string
+            const jsonString = JSON.stringify(customersSla);
+            console.log("JSON string:", jsonString);
+
+            return jsonString;
+        }
+        catch (error) {
+            console.error('Error fetching data:', error);
+            throw error; // Optionally re-throw the error after logging it
+        }
+    }
+
+    //const dbData = await fetchDbData();
+
+
+
     const parts = SLA.split(':');
 
     //const workingDays2 = SLA;
