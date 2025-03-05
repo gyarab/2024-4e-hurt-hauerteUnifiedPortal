@@ -71,24 +71,15 @@
             const data = await response.json();
 
             // Declare the variable properly
-            const customersSla = data.data.alert_elapsed_sla;
-            console.log('Customers SLA:', customersSla);
+            const elapsedSla = data.data.alert_elapsed_sla;
 
-            // Convert the entire array to a single JSON string
-            const jsonString = JSON.stringify(customersSla);
-            console.log("JSON string:", jsonString);
-            console.log("IDK DATA", data);
-
-            return customersSla;
+            return elapsedSla;
         }
         catch (error) {
             console.error('Error fetching data:', error);
             throw error; // Optionally re-throw the error after logging it
         }
     }
-
-    //const dbData = await fetchDbData();
-
 
 
     const parts = SLA.split(':');
@@ -119,12 +110,6 @@
 	}
 
 
-
-
-
-
-    const start = parseInt(parts[1], 10);
-    const end = parseInt(parts[2], 10);
     console.log("startTime", startHour);       // 8
     console.log("endTime", endHour);
 
@@ -150,42 +135,6 @@
 
 	//const workingDays = ['Monday', 'Tuesday', 'Wednesday', 'Thursday'];
     const workingDays = workingDays2;
-
-     console.log("WORKING DAYS", workingDays2);
-     console.log("MY CLIENT ID", alertCustomerID);
-     console.log("MUY ALERT SEV", alertSevID);
-
-
-
-
-     /*
-    const clients = JSON.parse(SLA);
-    const resultIG = clients.find(client => client.client_id === alertCustomerID)?.sla;
-
-    // Split the SLA into components
-	let workingDays = [];
-	let startHour, endHour;
-
-	if (resultIG.includes(':')) {
-  		const [days, startTime, endTime] = resultIG.split(':');
-
-  		// Process working days
-  		workingDays = days.split(', ').map(day => day.trim());
-
-  		// Convert times to numbers
-  		startHour = parseInt(startTime, 10);
-  		endHour = parseInt(endTime, 10);
-	} else {
-  		// Handle case with no times (just days)
-  		workingDays = resultIG.split(', ').map(day => day.trim());
-	}
-¨
-      */
-
-
-
-
-
 
 
 	let result;
