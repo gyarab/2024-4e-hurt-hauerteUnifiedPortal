@@ -1566,3 +1566,8 @@ def get_alert_status_by_name(name: str) -> AlertStatus:
     """
     return AlertStatus.query.filter(AlertStatus.status_name == name).first()
 
+
+def get_elapsed_sla(alert_id: int) -> Alert:
+    elapsed_sla = Alert.query.filter(Alert.alert_id == alert_id).first()
+    return elapsed_sla
+

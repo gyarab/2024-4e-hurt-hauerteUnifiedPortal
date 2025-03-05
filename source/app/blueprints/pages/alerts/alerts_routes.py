@@ -39,6 +39,8 @@ from app.blueprints.responses import response_success
 
 from app.blueprints.access_controls import ac_api_requires
 
+from app.datamgmt.alerts.alerts_db import get_elapsed_sla
+
 alerts_blueprint = Blueprint(
     'alerts',
     __name__,
@@ -76,6 +78,18 @@ def get_clients_sla_api():
     }
 
     return response_success(data=output)
+
+#later move this to source/app/blueprints/rest/alerts_routes.py
+@alerts_blueprint.route('/alerts/api/get_elapsed_sla_api/<int:alert_id>', methods=['GET'])
+@ac_api_requires()
+def get_elapsed_sla_api(alert_id: int):
+    elapsed_sla = get_elapsed_sla(alert_id)
+    #output = {
+     #   "elapsed_sla": elapsed_sla
+    #}
+
+    return response_success(data=elapsed_sla)
+
 
 
 @alerts_blueprint.route('/alerts/<int:cur_id>/comments/modal', methods=['GET'])

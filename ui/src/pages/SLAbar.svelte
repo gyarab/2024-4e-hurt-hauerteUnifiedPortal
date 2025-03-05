@@ -67,18 +67,19 @@
     //it will either have -1 or other int value for SLA completed seconds number
     async function fetchDbData() {
         try {
-            const response = await fetch('alerts/api/get_clients_sla_api');
+            const response = await fetch(`alerts/api/get_elapsed_sla_api/${alertID}`);
             const data = await response.json();
 
             // Declare the variable properly
-            const customersSla = data.data.customers_sla;
+            const customersSla = data.data.alert_elapsed_sla;
             console.log('Customers SLA:', customersSla);
 
             // Convert the entire array to a single JSON string
             const jsonString = JSON.stringify(customersSla);
             console.log("JSON string:", jsonString);
+            console.log("IDK DATA", data);
 
-            return jsonString;
+            return customersSla;
         }
         catch (error) {
             console.error('Error fetching data:', error);
