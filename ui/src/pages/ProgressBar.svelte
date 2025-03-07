@@ -7,11 +7,16 @@
 
 	let dbData;
 
-    onMount(async () => {
-        console.log("I JUST MOUNTED AGAIN MOTHERFUCKER");
+	onMount(async () => {
+	console.log("I JUST MOUNTED AGAIN MOTHERFUCKER");
         dbData = await fetchDbData();
         console.log("DB_Data: ", dbData);
-    });
+      start();
+
+	   cleanupEffect = () => clearInterval(interval);
+	  });
+
+
 
 
   const MyState ={
@@ -25,6 +30,8 @@
 	//based on the alertID
 	// if NULL set state to running //FR??
   let currstate = $myStore.state;
+  //let currstate2 = await fetchDbData();
+
   //let { startDateTime = "01/02/2025 14:30", endDateTime = "01/02/2025 14:31" } = $props();
   export let startDateTime = "01/02/2025 14:30";
   export let endDateTime = "01/02/2025 14:30";
@@ -42,6 +49,7 @@
 
 	function start() {
 	  interval = setInterval(() => {
+		  console.log("db_data from loop ", dbData);
 		  if(currstate === MyState.RUNNING) {
 			  //calculate curr time
 			  currTimeEpoch = Math.floor((Date.now()) / (1000 * 60)) * 60;
@@ -56,15 +64,6 @@
 				  elapsed = $myStore.elapsed_saved; //TODO query the db for the current state of "SLAcompletedTime" column
 			  }
 
-			  /*
-			  console.log("-----------");
-			  console.log("startTimeEpoch: "+startTimeEpoch);
-			  console.log("duration: "+duration);
-			  console.log("elapsed: "+elapsed);
-			  console.log("currentTimeEpoch: "+currTimeEpoch);
-			  console.log("-----------");
-
-			   */
 			  if (elapsed > duration) {
 				  elapsed = duration
 				  clearInterval(interval)
@@ -79,7 +78,7 @@
 			  }
 		  }
 	  }, 1000)
-  }
+    }
 
   function getSecondsSinceEpoch(dateString) {
 	  // Split the input string into date and time parts
@@ -162,28 +161,8 @@
 	  console.log("Runing!");
   }
 
-  /*
-  $effect(() => {
-	  if (!duration) return
-	  start()
-	  return () => clearInterval(interval)
-  })
-   */
   let cleanupEffect;
-  $: {
-    // Call the previous cleanup (if any) before re-running the effect
-    if (cleanupEffect) cleanupEffect();
-    if (!duration) {
-      // No effect is set up if duration is falsy
-      cleanupEffect = null;
-    }
-    else {
-      // Execute your effect
-      start();
-      // Set up the cleanup function
-      cleanupEffect = () => clearInterval(interval);
-    }
-  }
+
   onDestroy(() => {
     if (cleanupEffect) cleanupEffect();
   });
