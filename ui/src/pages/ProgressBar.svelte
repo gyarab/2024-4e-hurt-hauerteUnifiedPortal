@@ -6,11 +6,18 @@
 	export let alertID;
 
 	let dbData;
+	let currstate2;
+	let elapsed2;
 
 	onMount(async () => {
 	console.log("I JUST MOUNTED AGAIN MOTHERFUCKER");
         dbData = await fetchDbData();
         console.log("DB_Data: ", dbData);
+
+		currstate2 = dbData;
+
+		elapsed2 = dbData;
+
       start();
 
 	   cleanupEffect = () => clearInterval(interval);
@@ -30,7 +37,7 @@
 	//based on the alertID
 	// if NULL set state to running //FR??
   let currstate = $myStore.state;
-  //let currstate2 = await fetchDbData();
+
 
   //let { startDateTime = "01/02/2025 14:30", endDateTime = "01/02/2025 14:31" } = $props();
   export let startDateTime = "01/02/2025 14:30";
@@ -50,18 +57,20 @@
 	function start() {
 	  interval = setInterval(() => {
 		  console.log("db_data from loop ", dbData);
+		  console.log("currst2 ", currstate2);
+		  console.log("elapsed2 ", elapsed2);
 		  if(currstate === MyState.RUNNING) {
 			  //calculate curr time
 			  currTimeEpoch = Math.floor((Date.now()) / (1000 * 60)) * 60;
 			  //startTimeEpoch = getSecondsSinceEpoch(startDateTime);
 				//console.log(currTimeEpoch);
 				//console.log(Math.floor((Date.now()) / (1000 * 60)) * 60);
-			  if($myStore.elapsed_saved < 0){ //TODO query the db for the current state of "SLAcompletedTime" column
+			  if(elapsed2 < 0){ //TODO query the db for the current state of "SLAcompletedTime" column
 				  elapsed = currTimeEpoch - startTimeEpoch + oldElapsedTime;
 				  console.log("elapsed: "+elapsed);
 			  }
 			  else { //ig call the fetch funcitons from here???
-				  elapsed = $myStore.elapsed_saved; //TODO query the db for the current state of "SLAcompletedTime" column
+				  elapsed = elapsed2; //TODO query the db for the current state of "SLAcompletedTime" column
 			  }
 
 			  if (elapsed > duration) {
@@ -142,6 +151,7 @@
 	  console.log("elapsedFromComplete "+elapsed);
 	  setValue('elapsed_saved', elapsed);// TODO write into db for current state elapsed to the "SLAcompletedTime" column
 	  setValue('state', 2);
+
 
 
 
