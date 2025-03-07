@@ -1,8 +1,17 @@
 <script lang="ts">
-	import {onDestroy, tick} from 'svelte';
+	import {onDestroy, onMount, tick} from 'svelte';
 
   	export let myStore;
   	export let alertStatusID;
+	export let alertID;
+
+	let dbData;
+
+    onMount(async () => {
+        console.log("I JUST MOUNTED AGAIN MOTHERFUCKER");
+        dbData = await fetchDbData();
+        console.log("DB_Data: ", dbData);
+    });
 
 
   const MyState ={
@@ -98,6 +107,26 @@
       [property]: newValue
     }));
   }
+
+
+  //this sould ectually fetch for column "SLAcompleted"
+  // it will either have -1 or other int value for SLA completed seconds number
+  async function fetchDbData() {
+        try {
+            const response = await fetch(`alerts/api/get_elapsed_sla_api/${alertID}`);
+            const data = await response.json();
+
+            // Declare the variable properly
+            const elapsedSla = data.data.alert_elapsed_sla;
+
+            return elapsedSla;
+        }
+        catch (error) {
+            console.error('Error fetching data:', error);
+            throw error; // Optionally re-throw the error after logging it
+        }
+    }
+
 
 
 

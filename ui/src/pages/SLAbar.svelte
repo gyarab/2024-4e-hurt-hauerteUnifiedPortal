@@ -3,13 +3,7 @@
     import { createPersistentStore } from './persistentStore.js';
     import { onMount } from 'svelte';
 
-    let dbData;
 
-    onMount(async () => {
-        console.log("I JUST MOUNTED AGAIN MOTHERFUCKER");
-        dbData = await fetchDbData();
-        console.log("DB_Data: ", dbData);
-    });
 
 	//setting up startDateTime value
 	let startDateTime = "01/02/2025 14:30";//defalut value
@@ -63,23 +57,6 @@
     //console.log(alertID);
 
 
-    //this sould ectually fetch for column "SLAcompleted"
-    //it will either have -1 or other int value for SLA completed seconds number
-    async function fetchDbData() {
-        try {
-            const response = await fetch(`alerts/api/get_elapsed_sla_api/${alertID}`);
-            const data = await response.json();
-
-            // Declare the variable properly
-            const elapsedSla = data.data.alert_elapsed_sla;
-
-            return elapsedSla;
-        }
-        catch (error) {
-            console.error('Error fetching data:', error);
-            throw error; // Optionally re-throw the error after logging it
-        }
-    }
 
 
     const parts = SLA.split(':');
@@ -276,10 +253,10 @@
   <p>Input Date and Time: {startDateTime}</p>
   {#if result === true} <!-- if within working hours -->
     <p>The provided time is within working hours.</p>
-	  <ProgressBar startDateTime={startDateTime} {endDateTime} {myStore} {alertStatusID}/>
+	  <ProgressBar startDateTime={startDateTime} {endDateTime} {myStore} {alertStatusID} {alertID}/>
   {:else} <!-- if not within working hours - recompute endDateTime-->
     <p>The closest working time is: {result}</p>
-	  <ProgressBar startDateTime={result} endDateTime={computedValue} {myStore} {alertStatusID}/>
+	  <ProgressBar startDateTime={result} endDateTime={computedValue} {myStore} {alertStatusID} {alertID}/>
   {/if}
 
 </div>
