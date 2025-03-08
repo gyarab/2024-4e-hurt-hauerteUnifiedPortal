@@ -135,6 +135,19 @@
         }
     }
 
+	async function putDbData() {
+        try {
+            const response = await fetch(`alerts/api/set_elapsed_sla_api/${alertID}/${elapsed}`);
+
+            const result = await response.json();
+        	console.log('Update result:', result);
+        }
+        catch (error) {
+            console.error('Error fetching data:', error);
+            throw error; // Optionally re-throw the error after logging it
+        }
+    }
+
 
 
 
@@ -149,8 +162,11 @@
 	  }
 	  //changeValue(elapsed);
 	  console.log("elapsedFromComplete "+elapsed);
-	  setValue('elapsed_saved', elapsed);// TODO write into db for current state elapsed to the "SLAcompletedTime" column
+	  setValue('elapsed_saved', elapsed);
 	  setValue('state', 2);
+	  // TODO write into db for current state elapsed to the "SLAcompletedTime" column
+	  putDbData();
+
 
 
 

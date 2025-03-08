@@ -41,6 +41,8 @@ from app.blueprints.access_controls import ac_api_requires
 
 from app.datamgmt.alerts.alerts_db import get_elapsed_sla
 
+from app.datamgmt.alerts.alerts_db import set_elapsed_sla
+
 alerts_blueprint = Blueprint(
     'alerts',
     __name__,
@@ -89,6 +91,13 @@ def get_elapsed_sla_api(alert_id: int):
     #}
 
     return response_success(data=elapsed_sla)
+
+
+@alerts_blueprint.route('/alerts/api/set_elapsed_sla_api/<int:alert_id>/<int:new_elapsed_sla>', methods=['GET'])
+@ac_api_requires(Permissions.alerts_write)
+def set_elapsed_sla_api(alert_id: int, new_elapsed_sla: int):
+    updated_alert = set_elapsed_sla(alert_id, new_elapsed_sla)
+    return response_success(data=updated_alert)
 
 
 
