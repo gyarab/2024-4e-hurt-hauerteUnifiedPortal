@@ -1,7 +1,7 @@
 <script lang="ts">
 	import {onDestroy, onMount, tick} from 'svelte';
 
-  	export let myStore;
+  	//export let myStore;
   	export let alertStatusID;
 	export let alertID;
 
@@ -17,6 +17,12 @@
 		currstate2 = dbData;
 
 		elapsed2 = dbData;
+		//if(dbData < 0){
+			currstate = MyState.RUNNING;
+		//}
+		if(dbData > 0){
+			//currstate = MyState.PAUSED;
+		}
 
       start();
 
@@ -36,7 +42,7 @@
 	//query the db for the current state of "SLAcompletedTime" column
 	//based on the alertID
 	// if NULL set state to running //FR??
-  let currstate = $myStore.state;
+  let currstate;
 
 
   //let { startDateTime = "01/02/2025 14:30", endDateTime = "01/02/2025 14:31" } = $props();
@@ -44,7 +50,7 @@
   export let endDateTime = "01/02/2025 14:30";
   let timecomputed = calculateDuration(); //calculate duration betwwen two timestamps in seconds
   //let elapsed = $state(0);
-  $: elapsed = $myStore.elapsed_saved; //TODO query the db for the current state of "SLAcompletedTime" column
+  $: elapsed = 0; //TODO query the db for the current state of "SLAcompletedTime" column
   //let duration = $state(timecomputed);
   $: duration = timecomputed;
   let interval: number
@@ -103,19 +109,6 @@
 	  return secondsSinceEpoch;
   }
 
-  function changeValue(newValue) {
-	  $myStore = newValue;
-  }
-
-
-  // Alternatively, if you want to set a property to a new absolute value:
-  function setValue(property, newValue) {
-    myStore.update(current => ({
-      ...current,
-      [property]: newValue
-    }));
-  }
-
 
   //this sould ectually fetch for column "SLAcompleted"
   // it will either have -1 or other int value for SLA completed seconds number
@@ -150,8 +143,6 @@
 
 
 
-
-
   function complete() {
 	  //elapsed = 0
 
@@ -162,14 +153,10 @@
 	  }
 	  //changeValue(elapsed);
 	  console.log("elapsedFromComplete "+elapsed);
-	  setValue('elapsed_saved', elapsed);
-	  setValue('state', 2);
+	  //setValue('elapsed_saved', elapsed);
+	  //setValue('state', 2);
 	  // TODO write into db for current state elapsed to the "SLAcompletedTime" column
 	  putDbData();
-
-
-
-
 
 
 	  //turn the shit green
@@ -256,8 +243,6 @@
 	<button on:click={complete}>Complete</button>
 </div>
 
-<p>Local store elapsed_saved: {$myStore.elapsed_saved}</p>
-<p>Local store state: {$myStore.state}</p>
 
 <style>
 	.progress-container {

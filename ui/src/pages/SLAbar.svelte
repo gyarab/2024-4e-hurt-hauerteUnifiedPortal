@@ -48,10 +48,7 @@
     // with initial value -1 (or null?)
     // here query if the alert with alert id alertID is NULL
     // if yes set state to  1 //FR??
-    const myStore = createPersistentStore(startDateTime, {
-        elapsed_saved: -1,
-        state: 1 //state RUNNING
-    });
+
 
     console.log(`MUJ START DATE TIME JE ${startDateTime}\nMUJ SLA IG TYVOLE ${SLA} MUJ ALERT ID ${alertID}`);
     //console.log(alertID);
@@ -253,10 +250,10 @@
   <p>Input Date and Time: {startDateTime}</p>
   {#if result === true} <!-- if within working hours -->
     <p>The provided time is within working hours.</p>
-	  <ProgressBar startDateTime={startDateTime} {endDateTime} {myStore} {alertStatusID} {alertID}/>
+	  <ProgressBar startDateTime={startDateTime} {endDateTime} {alertStatusID} {alertID}/>
   {:else} <!-- if not within working hours - recompute endDateTime-->
     <p>The closest working time is: {result}</p>
-	  <ProgressBar startDateTime={result} endDateTime={computedValue} {myStore} {alertStatusID} {alertID}/>
+	  <ProgressBar startDateTime={result} endDateTime={computedValue} {alertStatusID} {alertID}/>
   {/if}
 
 </div>
