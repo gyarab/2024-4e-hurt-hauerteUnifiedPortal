@@ -1376,32 +1376,6 @@ async function fetchSLAdata() {
         throw error; // Optionally re-throw the error after logging it
     }
 
-
-
-
-
-
-
-    /*
-    fetch('alerts/api/get_clients_sla_api')
-        .then(response => response.json())
-        .then(data => {
-            // Assuming the API returns an object with a "data" field that contains "customers_sla"
-            customersSla = data.data.customers_sla;
-            console.log('Customers SLA:', customersSla);
-
-            // Option 1: Convert the entire array to a single JSON string
-            const jsonString = JSON.stringify(customersSla);
-            console.log("JSON string:", jsonString);
-
-        })
-        .catch(error => {
-            console.error('Error fetching data:', error);
-        });
-
-        return await jsonString;
-
-     */
     }
 
 
@@ -1500,51 +1474,7 @@ async function updateAlerts(page, per_page, filters = {}, paging=false){
                     SLA: SLAdata,
                     alertID: alert.alert_id
                 }
-            }));
-
-
-
-            // Dispatch a custom event when done:
-          //const SLAelement = $(`#SLAelement`).text();
-          /*
-
-          let customersSla;
-          let clientString = "";
-          fetch('alerts/api/get_clients_sla_api')
-            .then(response => response.json())
-            .then(data => {
-                customersSla = data.data.customers_sla;
-                console.log('Customers SLA:', customersSla);
-
-                const jsonString = JSON.stringify(customersSla);
-                console.log("JSON string:", jsonString);
-
-                // Option 2: Convert each object to a custom formatted string and print them individually
-
-                customersSla.forEach(client => {
-                    if( client.client_id === alert.alert_customer_id){
-                        clientString = `${client.sla}`;
-                    }
-                });
-                console.log(`cleintString ${clientString} clientID ${alert.alert_customer_id}`);
-
-                document.dispatchEvent(new CustomEvent('alertRendered', {
-                detail: {
-                    IRIStime: alert.alert_creation_time,
-                    alertStatusID: alert.alert_status_id,
-                    alertSevID: alert.severity.severity_id,
-                    alertCustomerID: alert.alert_customer_id,
-                    SLA: jsonString
-                }
-            }));
-
-            })
-            .catch(error => {
-                console.error('Error fetching data:', error);
-            });
-
-           */
-
+          }));
       });
   }
 

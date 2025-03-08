@@ -6,15 +6,13 @@
 	export let alertID;
 
 	let dbData;
-	let currstate2;
 	let elapsed2;
 
 	onMount(async () => {
-	console.log("I JUST MOUNTED AGAIN MOTHERFUCKER");
+		console.log("I JUST MOUNTED AGAIN MOTHERFUCKER");
         dbData = await fetchDbData();
         console.log("DB_Data: ", dbData);
 
-		currstate2 = dbData;
 
 		elapsed2 = dbData;
 		//if(dbData < 0){
@@ -24,25 +22,19 @@
 			//currstate = MyState.PAUSED;
 		}
 
-      start();
+      	start();
 
 	   cleanupEffect = () => clearInterval(interval);
-	  });
+	});
 
-
-
-
-  const MyState ={
+  	const MyState ={
 		NEW: 0,
 	  	RUNNING: 1,
 	    PAUSED: 2,
-  };
+  	};
 
-	//TODO
-	//query the db for the current state of "SLAcompletedTime" column
-	//based on the alertID
-	// if NULL set state to running //FR??
-  let currstate;
+
+  	let currstate;
 
 
   //let { startDateTime = "01/02/2025 14:30", endDateTime = "01/02/2025 14:31" } = $props();
@@ -62,8 +54,6 @@
 
 	function start() {
 	  interval = setInterval(() => {
-		  console.log("db_data from loop ", dbData);
-		  console.log("currst2 ", currstate2);
 		  console.log("elapsed2 ", elapsed2);
 		  if(currstate === MyState.RUNNING) {
 			  //calculate curr time

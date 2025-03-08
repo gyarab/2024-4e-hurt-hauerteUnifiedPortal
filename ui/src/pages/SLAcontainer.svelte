@@ -8,7 +8,6 @@
 	export let SLA;
 	export let alertID;
 
-	console.log("SLA FROM SLACOntainer", SLA);
 
 </script>
 

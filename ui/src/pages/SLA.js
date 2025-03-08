@@ -4,8 +4,6 @@ export let app; // Declare at the top level
 
 document.addEventListener('alertRendered', (event) => {
   console.log('alertRendered event received');
-  console.log("SLA ELEMENT FROM SLA.JS !!! ", event.detail.alertCustomerID);
-  //console.log(event.detail.alertCustomerID);
   const containers = document.querySelectorAll('.SLAcontainer');
   console.log(containers);
   if (containers) {

@@ -1,26 +1,10 @@
 <script lang="ts">
     import ProgressBar from "./ProgressBar.svelte";
-    import { createPersistentStore } from './persistentStore.js';
-    import { onMount } from 'svelte';
-
 
 
 	//setting up startDateTime value
 	let startDateTime = "01/02/2025 14:30";//defalut value
-    //calculate timestamp DD/MM/YYYY HH:MM of current time
-    /*
-    const now = new Date();
-    const day = String(now.getDate()).padStart(2, '0');
-    const month = String(now.getMonth() + 1).padStart(2, '0'); // Months are zero-based
-    const year = now.getFullYear();
-    const hours = String(now.getHours()).padStart(2, '0');
-    const minutes = String(now.getMinutes()).padStart(2, '0');
-	startDateTime = `${day}/${month}/${year} ${hours}:${minutes}`;
-     */
-
-	//startDateTime = "06/02/2025 20:58";
     export let IRIStime;
-
 
     const date = new Date(IRIStime);
 
@@ -36,30 +20,15 @@
     startDateTime = `${day}/${month}/${year} ${hours}:${minutes}`;
 
 
-   //const myStore = createPersistentStore(startDateTime, -1);
     export let alertStatusID;
     export let alertSevID;
     export let SLA;
     export let alertCustomerID;
     export let alertID;
 
-    //TODO
-    //create a new column in table "alerts" called "SLAcompletedTime"
-    // with initial value -1 (or null?)
-    // here query if the alert with alert id alertID is NULL
-    // if yes set state to  1 //FR??
-
 
     console.log(`MUJ START DATE TIME JE ${startDateTime}\nMUJ SLA IG TYVOLE ${SLA} MUJ ALERT ID ${alertID}`);
-    //console.log(alertID);
 
-
-
-
-    const parts = SLA.split(':');
-
-    //const workingDays2 = SLA;
-   // const workingDays2 = parts[0].split(',').map(day => day.trim());
 
     const clients = JSON.parse(SLA);
     const resultIG = clients.find(client => client.client_id === alertCustomerID)?.sla;
@@ -82,11 +51,6 @@
   		// Handle case with no times (just days)
   		workingDays2 = resultIG.split(', ').map(day => day.trim());
 	}
-
-
-    console.log("startTime", startHour);       // 8
-    console.log("endTime", endHour);
-
 
 
 	//setting up severity
@@ -168,25 +132,25 @@
 	//input num of seconds
     //returns formated timestamp
     function getFormattedDateFromTimestamp(timestamp) {
-    // Create a Date object from the timestamp (multiply by 1000 to convert seconds to milliseconds)
-    const date = new Date(timestamp * 1000);
-    // Extract day, month, year, hours, and minutes
-    const day = String(date.getDate()).padStart(2, '0'); // Ensure 2 digits
-    const month = String(date.getMonth() + 1).padStart(2, '0'); // Months are 0-based
-    const year = date.getFullYear();
-    const hours = String(date.getHours()).padStart(2, '0'); // Ensure 2 digits
-    const minutes = String(date.getMinutes()).padStart(2, '0'); // Ensure 2 digits
-    // Format the date and time as DD/MM/YYYY HH:MM
-    const formattedDate = `${day}/${month}/${year} ${hours}:${minutes}`;
-    return formattedDate;
-}
+        // Create a Date object from the timestamp (multiply by 1000 to convert seconds to milliseconds)
+        const date = new Date(timestamp * 1000);
+        // Extract day, month, year, hours, and minutes
+        const day = String(date.getDate()).padStart(2, '0'); // Ensure 2 digits
+        const month = String(date.getMonth() + 1).padStart(2, '0'); // Months are 0-based
+        const year = date.getFullYear();
+        const hours = String(date.getHours()).padStart(2, '0'); // Ensure 2 digits
+        const minutes = String(date.getMinutes()).padStart(2, '0'); // Ensure 2 digits
+        // Format the date and time as DD/MM/YYYY HH:MM
+        const formattedDate = `${day}/${month}/${year} ${hours}:${minutes}`;
+        return formattedDate;
+    }
     //converts the formated timestamp to Date object - easier to work with
 	function parseDateTime(dateTime) {
     	const [date, time] = dateTime.split(' ');
     	const [day, month, year] = date.split('/').map(Number);
     	const [hours, minutes] = time.split(':').map(Number);
-   	 return new Date(year, month - 1, day, hours, minutes);
-  }
+   	    return new Date(year, month - 1, day, hours, minutes);
+    }
     //inputs Date object and
     // returns formated timestamp string
     //if not Date object inputted return true - indicates we are in current working hours
