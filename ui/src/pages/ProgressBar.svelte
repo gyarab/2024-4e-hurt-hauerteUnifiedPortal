@@ -6,7 +6,7 @@
 	export let alertID;
 
 	let dbData;
-	let elapsed2;
+	let dbElapsedSla;
 
 	onMount(async () => {
 		console.log("I JUST MOUNTED AGAIN MOTHERFUCKER");
@@ -14,7 +14,7 @@
         console.log("DB_Data: ", dbData);
 
 
-		elapsed2 = dbData;
+		dbElapsedSla = dbData;
 		//if(dbData < 0){
 			currstate = MyState.RUNNING;
 		//}
@@ -54,19 +54,21 @@
 
 	function start() {
 	  interval = setInterval(() => {
-		  console.log("elapsed2 ", elapsed2);
+		  console.log("elapsed2 ", dbElapsedSla);
 		  if(currstate === MyState.RUNNING) {
 			  //calculate curr time
 			  currTimeEpoch = Math.floor((Date.now()) / (1000 * 60)) * 60;
 			  //startTimeEpoch = getSecondsSinceEpoch(startDateTime);
 				//console.log(currTimeEpoch);
 				//console.log(Math.floor((Date.now()) / (1000 * 60)) * 60);
-			  if(elapsed2 < 0){ //TODO query the db for the current state of "SLAcompletedTime" column
+			  if(dbElapsedSla < 0){ //
 				  elapsed = currTimeEpoch - startTimeEpoch + oldElapsedTime;
 				  console.log("elapsed: "+elapsed);
 			  }
-			  else { //ig call the fetch funcitons from here???
-				  elapsed = elapsed2; //TODO query the db for the current state of "SLAcompletedTime" column
+			  else { //SLA is not -1 therefore was completed sometime before
+				  elapsed = dbElapsedSla; //
+				  clearInterval(interval)
+				  currstate = MyState.PAUSED;
 			  }
 
 			  if (elapsed > duration) {
