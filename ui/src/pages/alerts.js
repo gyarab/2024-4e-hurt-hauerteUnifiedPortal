@@ -1497,7 +1497,8 @@ async function updateAlerts(page, per_page, filters = {}, paging=false){
                     alertStatusID: alert.alert_status_id,
                     alertSevID: alert.severity.severity_id,
                     alertCustomerID: alert.alert_customer_id,
-                    SLA: SLAdata
+                    SLA: SLAdata,
+                    alertID: alert.alert_id
                 }
             }));
 
