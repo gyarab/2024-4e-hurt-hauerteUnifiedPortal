@@ -1339,9 +1339,6 @@ async function refreshAlert(alertId, alertData, expanded=false) {
     console.log(alertData.alert_customer_id);
     //document.dispatchEvent(new CustomEvent('alertRendered', { detail: { IRIStime: alertData.alert_creation_time, alertStatusID: alertData.alert_status_id }}));
 
-    //const response = get_request_api('/alerts/api/get_clients_sla_api');
-    //const SLAdata = response.responseJSON.data.customers_sla;
-
     document.dispatchEvent(new CustomEvent('alertRendered', {
         detail: {
             IRIStime: alertData.alert_creation_time,

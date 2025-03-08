@@ -30,28 +30,33 @@
     console.log(`MUJ START DATE TIME JE ${startDateTime}\nMUJ SLA IG TYVOLE ${SLA} MUJ ALERT ID ${alertID}`);
 
 
-    const clients = JSON.parse(SLA);
-    const resultIG = clients.find(client => client.client_id === alertCustomerID)?.sla;
-
-    // Split the SLA into components
-	let workingDays2 = [];
+    let workingDays = [];
 	let startHour = 8;
     let endHour = 20;
 
-    if (resultIG.includes(':')) {
-  		const [days, startTime, endTime] = resultIG.split(':');
+    //parsing SLA string
+    const clients = JSON.parse(SLA);
+    const myClient = clients.find(client => client.client_id === alertCustomerID)?.sla;
+
+    // Split the SLA into components
+    if (myClient.includes(':')) {
+  		const [days, startTime, endTime] = myClient.split(':');
 
   		// Process working days
-  		workingDays2 = days.split(', ').map(day => day.trim());
+  		workingDays = days.split(', ').map(day => day.trim());
 
   		// Convert times to numbers
   		startHour = parseInt(startTime, 10);
   		endHour = parseInt(endTime, 10);
 	} else {
   		// Handle case with no times (just days)
-  		workingDays2 = resultIG.split(', ').map(day => day.trim());
+  		workingDays = myClient.split(', ').map(day => day.trim());
 	}
 
+    const workingHours = {
+    	start: startHour, // 8:00 AM
+    	end: endHour // 8:00 PM
+  	};
 
 	//setting up severity
 	const SEVERITY ={
@@ -65,15 +70,8 @@
 	let endDateTime = "01/02/2025 22:31"; //default value
 	endDateTime = calculateEndDateTime(startDateTime, alertSevID);
 	console.log("EndTimeeeee:"+endDateTime);
-	//setting up SLA params
-	const workingHours = {
-    	start: startHour, // 8:00 AM
-    	end: endHour // 8:00 PM
-  	};
 
 	//const workingDays = ['Monday', 'Tuesday', 'Wednesday', 'Thursday'];
-    const workingDays = workingDays2;
-
 
 	let result;
 	result = getClosestWorkingTime(startDateTime);
@@ -85,6 +83,7 @@
 		computedValue = calculateEndDateTime(result, alertSevID);
 		console.log("computed value: "+computedValue)
 	}
+
 	//input in formated timestamp
     //returns formated timestamp
     function calculateEndDateTime(startDateTime, severity) {
@@ -106,7 +105,7 @@
     		secondsEpoch += SEVERITY.MEDIUM * 3600;
   		}
 		else if (severity === 5) {
-    		secondsEpoch = secondsEpoch+1200;
+    		secondsEpoch = secondsEpoch+600;
   		}
         else {
             secondsEpoch += 12 * 3600;
@@ -114,6 +113,7 @@
   		// Return the formatted date-time string
   		return getFormattedDateFromTimestamp(secondsEpoch);
 	}
+
     //inputs formated timestamp
     //returns num of seconds
     function getSecondsSinceEpoch(dateString) {
@@ -129,6 +129,7 @@
         const secondsSinceEpoch = Math.floor(date.getTime() / 1000);
         return secondsSinceEpoch;
     }
+
 	//input num of seconds
     //returns formated timestamp
     function getFormattedDateFromTimestamp(timestamp) {
@@ -144,6 +145,7 @@
         const formattedDate = `${day}/${month}/${year} ${hours}:${minutes}`;
         return formattedDate;
     }
+
     //converts the formated timestamp to Date object - easier to work with
 	function parseDateTime(dateTime) {
     	const [date, time] = dateTime.split(' ');
@@ -151,6 +153,7 @@
     	const [hours, minutes] = time.split(':').map(Number);
    	    return new Date(year, month - 1, day, hours, minutes);
     }
+
     //inputs Date object and
     // returns formated timestamp string
     //if not Date object inputted return true - indicates we are in current working hours
@@ -165,6 +168,7 @@
     	const minutes = String(date.getMinutes()).padStart(2, '0');
     	return `${day}/${month}/${year} ${hours}:${minutes}`;
   	}
+
     // Check if it's a working day and within working hours - if yes return true else return next working time
     function getClosestWorkingTime(inputDateTime) {
     	const inputDate = parseDateTime(inputDateTime);
@@ -219,5 +223,4 @@
     <p>The closest working time is: {result}</p>
 	  <ProgressBar startDateTime={result} endDateTime={computedValue} {alertStatusID} {alertID}/>
   {/if}
-
 </div>

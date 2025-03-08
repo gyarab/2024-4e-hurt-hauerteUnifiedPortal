@@ -92,7 +92,7 @@ def get_elapsed_sla_api(alert_id: int):
 
     return response_success(data=elapsed_sla)
 
-
+#later move this to source/app/blueprints/rest/alerts_routes.py
 @alerts_blueprint.route('/alerts/api/set_elapsed_sla_api/<int:alert_id>/<int:new_elapsed_sla>', methods=['GET'])
 @ac_api_requires(Permissions.alerts_write)
 def set_elapsed_sla_api(alert_id: int, new_elapsed_sla: int):

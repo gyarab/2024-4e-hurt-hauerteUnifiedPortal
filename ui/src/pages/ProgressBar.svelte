@@ -5,13 +5,13 @@
 	export let alertID;
 
 	let dbElapsedSla;
+	let currstate;
 
 	onMount(async () => {
 		console.log("I JUST MOUNTED AGAIN MOTHERFUCKER");
         dbElapsedSla = await fetchAlertSla();
         console.log("DB_Data: ", dbElapsedSla);
 
-		//dbElapsedSla = dbData;
 		currstate = MyState.RUNNING;
 
       	start();
@@ -24,9 +24,6 @@
 	  	RUNNING: 1,
 	    PAUSED: 2,
   	};
-
-
-  	let currstate;
 
 
   	//let { startDateTime = "01/02/2025 14:30", endDateTime = "01/02/2025 14:31" } = $props();
@@ -89,8 +86,8 @@
 	}
 
 
-  	//this sould ectually fetch for column "SLAcompleted"
-  	// it will either have -1 or other int value for SLA completed seconds number
+  	//this should actually fetch for column "alert_elapsed_sla"
+  	// it will either have -1 or other int value for SLA completed seconds
   	async function fetchAlertSla() {
         try {
             const response = await fetch(`alerts/api/get_elapsed_sla_api/${alertID}`);
@@ -103,7 +100,7 @@
         }
         catch (error) {
             console.error('Error fetching data:', error);
-            throw error; // Optionally re-throw the error after logging it
+            throw error;
         }
     }
 
@@ -116,7 +113,7 @@
         }
         catch (error) {
             console.error('Error fetching data:', error);
-            throw error; // Optionally re-throw the error after logging it
+            throw error;
         }
     }
 
@@ -194,10 +191,9 @@
 				<span>Elapsed time:</span>
 			</div>
 
-				<label class="row col-md-12" style="display: flex;justify-content: center;">
-					<progress class:completed={currstate === MyState.PAUSED} class:breached={SLAbreached} max={duration} value={elapsed}></progress>
-				</label>
-
+			<label class="row col-md-12" style="display: flex;justify-content: center;">
+				<progress class:completed={currstate === MyState.PAUSED} class:breached={SLAbreached} max={duration} value={elapsed}></progress>
+			</label>
 
 			<div class="row col-md-12" style="display: flex;justify-content: center;">
 				<p>{elapsed.toFixed(1)}s</p>
