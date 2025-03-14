@@ -204,9 +204,6 @@
     {#if duration === elapsed}
         <p class="row col-md-12" style="display: flex;justify-content: center;"><strong>SLA breached!</strong></p>
 	{/if}
-	<button on:click={pause}>Pause</button>
-	<button on:click={resume}>Resume</button>
-	<button on:click={complete}>Complete</button>
 </div>
 
 

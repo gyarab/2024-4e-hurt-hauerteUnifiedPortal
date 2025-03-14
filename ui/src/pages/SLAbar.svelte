@@ -215,9 +215,7 @@
 </script>
 
 <div class="grid-gap">
-  <p>Input Date and Time: {startDateTime}</p>
   {#if result === true} <!-- if within working hours -->
-    <p>The provided time is within working hours.</p>
 	  <ProgressBar startDateTime={startDateTime} {endDateTime} {alertStatusID} {alertID}/>
   {:else} <!-- if not within working hours - recompute endDateTime-->
     <p>The closest working time is: {result}</p>
