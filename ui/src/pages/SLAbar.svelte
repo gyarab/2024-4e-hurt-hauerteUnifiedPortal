@@ -218,7 +218,6 @@
   {#if result === true} <!-- if within working hours -->
 	  <ProgressBar startDateTime={startDateTime} {endDateTime} {alertStatusID} {alertID}/>
   {:else} <!-- if not within working hours - recompute endDateTime-->
-    <p>The closest working time is: {result}</p>
 	  <ProgressBar startDateTime={result} endDateTime={computedValue} {alertStatusID} {alertID}/>
   {/if}
 </div>
