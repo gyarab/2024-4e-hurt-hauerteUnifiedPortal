@@ -31,8 +31,6 @@ from app.models.authorization import Permissions
 from app.blueprints.responses import response_error
 from app.blueprints.access_controls import ac_requires
 
-from app.datamgmt.client.client_db import get_client, get_client_list
-from app.forms import AddCustomerForm
 
 from app.datamgmt.client.client_db import get_clients_sla
 from app.blueprints.responses import response_success
