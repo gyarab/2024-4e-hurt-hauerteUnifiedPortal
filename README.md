@@ -1,50 +1,118 @@
-# 2024-4e-hurt-hauerteUnifiedPortal
+# 🚀 2024-4e-hurt-hauerteUnifiedPortal
 
-Integration between Microsoft's SIEM - Azure Senitenel and IRIS  - Open-Source Collaborative Incident Response Platform. Itegration should be fully functional and maintained to the latest version of IRIS. Itegration works in the cloud eviroment which enables anyone to seamlessly delploy this integration without the need to make any changes to the original codebase. As long as backwards compatability in the original IRIS project is ensured this integration will remain functional even without a maintainer. Deployment using Logic Apps also further enables third parties to make easy modifications without neccessearly understading the underlaying infrastracture. hauerteUnifiedPortal is a fork of IRIS. 
+Integration between Microsoft's SIEM - **Azure Sentinel** and **IRIS** - Open-Source Collaborative Incident Response Platform. This integration is designed to be fully functional and maintained to align with the latest version of IRIS.
 
-Main branch contains Azure Logic Apps definitions in .json format **while IRIS code is on master and develop branch.** 
+✅ **Cloud-native:** Seamlessly deploy the integration without modifying the original codebase.  
+✅ **Backward Compatibility:** As long as the IRIS project remains backward compatible, this integration will function without manual maintenance.  
+✅ **Customizable:** Azure Logic Apps enable third-party modifications without deep knowledge of the underlying infrastructure.  
 
+> 🛠️ *`hauerteUnifiedPortal` is a fork of the IRIS project.*
 
+### 📁 Branch Structure
 
-## setting up for local dev ##
+- **Main Branch:** Contains Azure Logic Apps definitions in `.json` format.  
+- **Master/Develop Branches:** Hold the IRIS code.
 
-Pycharm > new project > from VCS > clone https://github.com/gyarab/2024-4e-hurt-hauerteUnifiedPortal.git
+---
 
-open terminal 
+## 🧑‍💻 Setting Up for Local Development
 
-git switch develop
+### 1️⃣ Clone the Repository
 
-Copy the environment file 
-cp .env.model .env
+1. Open **PyCharm** → **New Project** → **From VCS**  
+2. Clone the repository:
 
-nano .env
+    ```sh
+    git clone https://github.com/gyarab/2024-4e-hurt-hauerteUnifiedPortal.git
+    cd 2024-4e-hurt-hauerteUnifiedPortal
+    git switch develop
+    ```
 
-to set the admin password go to .env file and uncomment IRIS_ADM_PASSWORD variable
- or after running dfir-iris FOR THE FIRST TIME run
-docker compose logs app | grep "WARNING :: post_init :: create_safe_admin"
- to get randomly generated password.
+### 2️⃣ Configure Environment Variables
 
- nano docker-compose.dev.yml
+1. Copy the example environment file:
 
-add line in the app container - ports: "8000:8000"
+    ```sh
+    cp .env.model .env
+    ```
 
-docker compose -f docker-compose.dev.yml build
+2. Edit the `.env` file:
 
-cd ui
+    ```sh
+    nano .env
+    ```
 
-npm install
+3. **Set Admin Password:**
 
-npm run build
+   - Uncomment `IRIS_ADM_PASSWORD` and define your password.
+   - Alternatively, retrieve a randomly generated password by running:
 
+    ```sh
+    docker compose logs app | grep "WARNING :: post_init :: create_safe_admin"
+    ```
+
+### 3️⃣ Configure Docker
+
+1. Open `docker-compose.dev.yml` and add this line under the `app` container:
+
+    ```yaml
+    ports:
+      - "8000:8000"
+    ```
+
+2. Build the Docker containers:
+
+    ```sh
+    docker compose -f docker-compose.dev.yml build
+    ```
+
+### 4️⃣ Set Up the Frontend
+
+1. Navigate to the UI directory:
+
+    ```sh
+    cd ui
+    ```
+
+2. Install dependencies and build the UI:
+
+    ```sh
+    npm install
+    npm run build
+    ```
+
+### 5️⃣ Run the Application
+
+Start the application with:
+
+```sh
 docker compose -f docker-compose.dev.yml up
+```
 
-iris should be avalible on https://127.0.0.1/ (without valid certificate tho)
+IRIS should now be available at: [https://127.0.0.1/](https://127.0.0.1/) (SSL certificate not provided).
 
-try out the connection
-API can be obtained when iris is running in My Settings after you sign in to the admin acccount.
-curl -H "Autorization: bearer: <API-token>" http://127.0.0.1:8000/api/ping
+---
 
-send an testing alert
+## 🔗 Testing the Integration
+
+### 1️⃣ Obtain API Token
+
+1. Sign in to the **admin account** on your local IRIS instance.
+2. Navigate to **My Settings** and copy the API token.
+
+### 2️⃣ Check API Connectivity
+
+Verify the API connection with a `ping` request:
+
+```sh
+curl -H "Authorization: Bearer <API-token>" http://127.0.0.1:8000/api/ping
+```
+
+### 3️⃣ Send a Test Alert
+
+You can send a sample alert using the following command:
+
+```sh
 curl -X POST http://127.0.0.1:8000/alerts/add \
 -H "Authorization: Bearer <API-token>" \
 -H "Content-Type: application/json" \
@@ -60,7 +128,7 @@ curl -X POST http://127.0.0.1:8000/alerts/add \
       "description":"",
       "entities":[],
       "title":"",
-       "URL":""
+      "URL":""
    },
    "alert_severity_id":4,
    "alert_status_id":3,
@@ -70,12 +138,26 @@ curl -X POST http://127.0.0.1:8000/alerts/add \
    "alert_source_event_time":"2024-12-28T03:00:30",
    "alert_note":"",
    "alert_tags":"",
-   "alert_iocs":[
-   ],
-   "alert_assets":[ 
-   ],
+   "alert_iocs":[],
+   "alert_assets":[],
    "alert_customer_id":1,
    "alert_classification_id":1
 }'
+```
 
+🎉 **You're all set!** This verifies that the IRIS and Azure Sentinel integration is functioning correctly.
+
+---
+
+## 📌 Contribution
+
+Feel free to submit issues or pull requests. Your contributions help improve this integration and keep it up-to-date!
+
+👤 **Maintainer:** [Olie](https://github.com/gyarab)
+
+---
+
+## 📜 License
+
+This project is licensed under the [MIT License](LICENSE).
 
