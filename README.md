@@ -93,7 +93,7 @@ IRIS should now be available at: [https://127.0.0.1/](https://127.0.0.1/) (SSL c
 
 ---
 
-## 🔗 Testing the Integration
+## 🔗 Testing IRIS
 
 ### 1️⃣ Obtain API Token
 
