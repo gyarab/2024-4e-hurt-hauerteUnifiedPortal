@@ -147,6 +147,8 @@ curl -X POST http://127.0.0.1:8000/alerts/add \
 
 🎉 **You're all set!** This verifies that the IRIS is functioning correctly.
 
+You can now develop iris locally. When you edit front-end don't forget to rebuild the ui (```sh npm run build```). After developing the back-end container rebuild is needed.
+
 ---
 
 ## 📌 Contribution
