@@ -145,7 +145,7 @@ curl -X POST http://127.0.0.1:8000/alerts/add \
 }'
 ```
 
-🎉 **You're all set!** This verifies that the IRIS and Azure Sentinel integration is functioning correctly.
+🎉 **You're all set!** This verifies that the IRIS is functioning correctly.
 
 ---
 
@@ -153,7 +153,7 @@ curl -X POST http://127.0.0.1:8000/alerts/add \
 
 Feel free to submit issues or pull requests. Your contributions help improve this integration and keep it up-to-date!
 
-👤 **Maintainer:** [Olie](https://github.com/gyarab)
+👤 **Maintainer:** [Oliver H](https://github.com/gyarab)
 
 ---
 
