@@ -6,7 +6,7 @@ Integration between Microsoft's SIEM - **Azure Sentinel** and **IRIS** - Open-So
 ✅ **Backward Compatibility:** As long as the IRIS project remains backward compatible, this integration will function without manual maintenance.  
 ✅ **Customizable:** Azure Logic Apps enable third-party modifications without deep knowledge of the underlying infrastructure.  
 
-> 🛠️ *`hauerteUnifiedPortal` is a fork of the IRIS project.*
+> 🛠️ *`hauerteUnifiedPortal` is a fork of the [IRIS](https://github.com/dfir-iris/iris-web) project.*
 
 ### 📁 Branch Structure
 
