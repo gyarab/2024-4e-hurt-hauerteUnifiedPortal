@@ -161,5 +161,5 @@ Feel free to submit issues or pull requests. Your contributions help improve thi
 
 ## 📜 License
 
-This project is licensed under the [MIT License](LICENSE).
+This project is licensed under the [GPLv3 License](LICENSE).
 
