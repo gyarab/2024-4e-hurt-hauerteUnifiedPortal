@@ -1,0 +1,1579 @@
+{
+  "languageVersion": "2.0",
+  "$schema": "https://schema.management.azure.com/schemas/2019-04-01/deploymentTemplate.json#",
+  "contentVersion": "1.0.0.0",
+  "parameters": {
+    "API key admin ig": {
+      "defaultValue": "PFz20T-b5kxeBl3XXXXXXXXXXX",
+      "type": "String"
+    },
+    "IrisIPaddress": {
+      "defaultValue": "X.X.X.X",
+      "type": "String"
+    },
+    "UserMapping": {
+      "defaultValue": [
+        {
+          "sentinel": "oliver.hurt@gyarab.com",
+          "iris": "oliver.hurt"
+        },
+        {
+          "sentinel": "petr.novak@gyarab.com",
+          "iris": "petr.novak"
+        }
+      ],
+      "type": "Array"
+    },
+    "SeverityMapping": {
+      "defaultValue": [
+        {
+          "sentinel": "Low",
+          "iris": "Low"
+        },
+        {
+          "sentinel": "Medium",
+          "iris": "Medium"
+        },
+        {
+          "sentinel": "High",
+          "iris": "High"
+        },
+        {
+          "sentinel": "High",
+          "iris": "Critical"
+        },
+        {
+          "sentinel": "Low",
+          "iris": "Unspecified"
+        },
+        {
+          "sentinel": "Informational",
+          "iris": "Informational"
+        }
+      ],
+      "type": "Array"
+    },
+    "ResolutionMapping": {
+      "defaultValue": [
+        {
+          "sentinel": "BenignPositive-SuspiciousButExpected",
+          "iris": "True Positive Without Impact"
+        },
+        {
+          "sentinel": "BenignPositive-SuspiciousButExpected",
+          "iris": "Legitimate"
+        },
+        {
+          "sentinel": "FalsePositive-IncorrectAlertLogic",
+          "iris": "False Positive"
+        },
+        {
+          "sentinel": "TruePositive-SuspiciousActivity",
+          "iris": "True Positive With Impact"
+        },
+        {
+          "sentinel": "Undetermined",
+          "iris": "Unknown"
+        },
+        {
+          "sentinel": "Undetermined",
+          "iris": "Not Applicable"
+        }
+      ],
+      "type": "Array"
+    }
+  },
+  "resources": {
+    "sentinelconnection": {
+      "kind": "V1",
+      "properties": {
+        "displayName": "Sentinel-Connection",
+        "authenticatedUser": {},
+        "overallStatus": "Ready",
+        "statuses": [
+          {
+            "status": "Ready"
+          }
+        ],
+        "connectionState": "Enabled",
+        "customParameterValues": {},
+        "alternativeParameterValues": {},
+        "parameterValueType": "Alternative",
+        "api": {
+          "name": "azuresentinel",
+          "displayName": "Microsoft Sentinel",
+          "description": "Cloud-native SIEM with a built-in AI so you can focus on what matters most",
+          "iconUri": "https://conn-afd-prod-endpoint-bmc9bqahasf3grgk.b01.azurefd.net/releases/v1.0.1732/1.0.1732.4070/azuresentinel/icon.png",
+          "brandColor": "#0072C6",
+          "category": "Standard",
+          "id": "[subscriptionResourceId('Microsoft.Web/locations/managedApis',resourceGroup().location,'azuresentinel')]",
+          "type": "Microsoft.Web/locations/managedApis"
+        }
+      },
+      "apiVersion": "2016-06-01",
+      "name": "sentinelconnection",
+      "type": "Microsoft.Web/connections",
+      "location": "[resourceGroup().location]"
+    },
+    "SentinelSync": {
+      "type": "Microsoft.ManagedIdentity/UserAssignedIdentities",
+      "apiVersion": "2023-01-31",
+      "location": "[resourceGroup().location]",
+      "name": "SentinelSync"
+    },
+    "IrisSyncIncidentStatus": {
+      "properties": {
+        "state": "Enabled",
+        "version": "08584595750520391114",
+        "accessEndpoint": "https://prod-207.westeurope.logic.azure.com:443/workflows/8019607904954639abb5b5bddb86c119",
+        "definition": {
+          "$schema": "https://schema.management.azure.com/providers/Microsoft.Logic/schemas/2016-06-01/workflowdefinition.json#",
+          "contentVersion": "1.0.0.0",
+          "parameters": {
+            "$connections": {
+              "defaultValue": {},
+              "type": "Object"
+            }
+          },
+          "triggers": {
+            "Microsoft_Sentinel_incident": {
+              "type": "ApiConnectionWebhook",
+              "inputs": {
+                "host": {
+                  "connection": {
+                    "name": "@parameters('$connections')['azuresentinel-1']['connectionId']"
+                  }
+                },
+                "body": {
+                  "callback_url": "@listCallbackUrl()"
+                },
+                "path": "/incident-creation"
+              }
+            }
+          },
+          "actions": {
+            "For_each_tag": {
+              "foreach": "@triggerBody()?['object']?['properties']?['labels']",
+              "actions": {
+                "Condition_-_SOC_tag": {
+                  "actions": {
+                    "Switch_-_Incident_Status": {
+                      "cases": {
+                        "Active": {
+                          "case": "Active",
+                          "actions": {
+                            "HTTP_Active": {
+                              "type": "Http",
+                              "inputs": {
+                                "uri": "http://20.224.56.0:8000/alerts/update/@{last(split(item()?['labelName'], '-'))}",
+                                "method": "POST",
+                                "body": {
+                                  "alert_status_id": 4
+                                },
+                                "authentication": {
+                                  "type": "Raw",
+                                  "value": "Bearer PFz20T-b5kxeBl35qf5fy81sqjR5uaJ4uQ5ViWQo7l_MnzXljdU2YDqtsZQ32dUONm1JsWkb0aflQyaJ2Z5yMg"
+                                }
+                              },
+                              "runtimeConfiguration": {
+                                "contentTransfer": {
+                                  "transferMode": "Chunked"
+                                }
+                              }
+                            }
+                          }
+                        },
+                        "Closed": {
+                          "case": "Closed",
+                          "actions": {
+                            "Switch_-_Incident_classification": {
+                              "cases": {
+                                "Benign_Positive": {
+                                  "case": "BenignPositive",
+                                  "actions": {
+                                    "HTTP_TP_without_impact": {
+                                      "type": "Http",
+                                      "inputs": {
+                                        "uri": "http://20.224.56.0:8000/alerts/update/@{last(split(item()?['labelName'], '-'))}",
+                                        "method": "POST",
+                                        "body": {
+                                          "alert_resolution_status_id": 3,
+                                          "alert_note": "@{triggerBody()?['object']?['properties']?['classificationComment']}",
+                                          "alert_status_id": 6
+                                        },
+                                        "authentication": {
+                                          "type": "Raw",
+                                          "value": "Bearer PFz20T-b5kxeBl35qf5fy81sqjR5uaJ4uQ5ViWQo7l_MnzXljdU2YDqtsZQ32dUONm1JsWkb0aflQyaJ2Z5yMg"
+                                        }
+                                      },
+                                      "runtimeConfiguration": {
+                                        "contentTransfer": {
+                                          "transferMode": "Chunked"
+                                        }
+                                      }
+                                    }
+                                  }
+                                },
+                                "True_Positive": {
+                                  "case": "TruePositive",
+                                  "actions": {
+                                    "HTTP_TP_with_impact": {
+                                      "type": "Http",
+                                      "inputs": {
+                                        "uri": "http://20.224.56.0:8000/alerts/update/@{last(split(item()?['labelName'], '-'))}",
+                                        "method": "POST",
+                                        "body": {
+                                          "alert_resolution_status_id": 2,
+                                          "alert_note": "@{triggerBody()?['object']?['properties']?['classificationComment']}",
+                                          "alert_status_id": 6
+                                        },
+                                        "authentication": {
+                                          "type": "Raw",
+                                          "value": "Bearer PFz20T-b5kxeBl35qf5fy81sqjR5uaJ4uQ5ViWQo7l_MnzXljdU2YDqtsZQ32dUONm1JsWkb0aflQyaJ2Z5yMg"
+                                        }
+                                      },
+                                      "runtimeConfiguration": {
+                                        "contentTransfer": {
+                                          "transferMode": "Chunked"
+                                        }
+                                      }
+                                    }
+                                  }
+                                },
+                                "Undetermined": {
+                                  "case": "Undetermined",
+                                  "actions": {
+                                    "HTTP_Closed": {
+                                      "type": "Http",
+                                      "inputs": {
+                                        "uri": "http://20.224.56.0:8000/alerts/update/@{last(split(item()?['labelName'], '-'))}",
+                                        "method": "POST",
+                                        "body": {
+                                          "alert_resolution_status_id": 4,
+                                          "alert_note": "@{triggerBody()?['object']?['properties']?['classificationComment']}",
+                                          "alert_status_id": 6
+                                        },
+                                        "authentication": {
+                                          "type": "Raw",
+                                          "value": "Bearer PFz20T-b5kxeBl35qf5fy81sqjR5uaJ4uQ5ViWQo7l_MnzXljdU2YDqtsZQ32dUONm1JsWkb0aflQyaJ2Z5yMg"
+                                        }
+                                      },
+                                      "runtimeConfiguration": {
+                                        "contentTransfer": {
+                                          "transferMode": "Chunked"
+                                        }
+                                      }
+                                    }
+                                  }
+                                }
+                              },
+                              "default": {
+                                "actions": {
+                                  "HTTP_FP": {
+                                    "type": "Http",
+                                    "inputs": {
+                                      "uri": "http://20.224.56.0:8000/alerts/update/@{last(split(item()?['labelName'], '-'))}",
+                                      "method": "POST",
+                                      "body": {
+                                        "alert_resolution_status_id": 1,
+                                        "alert_note": "@{triggerBody()?['object']?['properties']?['classificationComment']}",
+                                        "alert_status_id": 6
+                                      },
+                                      "authentication": {
+                                        "type": "Raw",
+                                        "value": "Bearer PFz20T-b5kxeBl35qf5fy81sqjR5uaJ4uQ5ViWQo7l_MnzXljdU2YDqtsZQ32dUONm1JsWkb0aflQyaJ2Z5yMg"
+                                      }
+                                    },
+                                    "runtimeConfiguration": {
+                                      "contentTransfer": {
+                                        "transferMode": "Chunked"
+                                      }
+                                    }
+                                  }
+                                }
+                              },
+                              "expression": "@triggerBody()?['object']?['properties']?['classification']",
+                              "type": "Switch"
+                            }
+                          }
+                        }
+                      },
+                      "default": {
+                        "actions": {}
+                      },
+                      "expression": "@triggerBody()?['object']?['properties']?['status']",
+                      "type": "Switch"
+                    }
+                  },
+                  "else": {
+                    "actions": {}
+                  },
+                  "expression": {
+                    "and": [
+                      {
+                        "contains": [
+                          "@item()?['labelName']",
+                          "SOC-"
+                        ]
+                      }
+                    ]
+                  },
+                  "type": "If"
+                }
+              },
+              "runAfter": {},
+              "type": "Foreach"
+            }
+          },
+          "outputs": {}
+        },
+        "parameters": {
+          "$connections": {
+            "value": {
+              "azuresentinel-1": {
+                "id": "[subscriptionResourceId('Microsoft.Web/locations/managedApis',resourceGroup().location,'azuresentinel')]",
+                "connectionId": "[resourceId('Microsoft.Web/connections','SentinelConnection')]",
+                "connectionName": "SentinelConnection",
+                "connectionProperties": {
+                  "authentication": {
+                    "type": "ManagedServiceIdentity"
+                  }
+                }
+              }
+            }
+          }
+        }
+      },
+      "apiVersion": "2017-07-01",
+      "name": "Iris-Sync-IncidentStatus",
+      "type": "Microsoft.Logic/workflows",
+      "location": "[resourceGroup().location]",
+      "identity": {
+        "type": "UserAssigned",
+        "userAssignedIdentities": {
+          "[resourceId('Microsoft.ManagedIdentity/UserAssignedIdentities', 'SentinelSync')]": {}
+        }
+      },
+      "dependsOn": [
+        "SentinelSync",
+        "sentinelconnection"
+      ]
+    },
+    "IrisSyncIncidents": {
+      "properties": {
+        "state": "Enabled",
+        "version": "08584593750068570896",
+        "accessEndpoint": "https://prod-197.westeurope.logic.azure.com:443/workflows/dd0e46c3291246efab95d097bd5832d9",
+        "definition": {
+          "$schema": "https://schema.management.azure.com/providers/Microsoft.Logic/schemas/2016-06-01/workflowdefinition.json#",
+          "contentVersion": "1.0.0.0",
+          "parameters": {
+            "SeverityMapping": {
+              "defaultValue": "[parameters('SeverityMapping')]",
+              "type": "Array"
+            },
+            "$connections": {
+              "defaultValue": {},
+              "type": "Object"
+            }
+          },
+          "triggers": {
+            "Microsoft_Sentinel_incident": {
+              "type": "ApiConnectionWebhook",
+              "inputs": {
+                "host": {
+                  "connection": {
+                    "name": "@parameters('$connections')['azuresentinel-1']['connectionId']"
+                  }
+                },
+                "body": {
+                  "callback_url": "@listCallbackUrl()"
+                },
+                "path": "/incident-creation"
+              }
+            }
+          },
+          "actions": {
+            "Parse_JSON": {
+              "runAfter": {
+                "For_each": [
+                  "Succeeded"
+                ]
+              },
+              "type": "ParseJson",
+              "inputs": {
+                "content": "@body('HTTP_-_Create_Alert')",
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "type": "object",
+                    "properties": {
+                      "status": {
+                        "type": "string"
+                      },
+                      "message": {
+                        "type": "string"
+                      },
+                      "data": {
+                        "type": "object",
+                        "properties": {
+                          "severity": {
+                            "type": "object",
+                            "properties": {
+                              "severity_id": {
+                                "type": "integer"
+                              },
+                              "severity_name": {
+                                "type": "string"
+                              },
+                              "severity_description": {
+                                "type": "string"
+                              }
+                            }
+                          },
+                          "status": {
+                            "type": "object",
+                            "properties": {
+                              "status_id": {
+                                "type": "integer"
+                              },
+                              "status_name": {
+                                "type": "string"
+                              },
+                              "status_description": {
+                                "type": "string"
+                              }
+                            }
+                          },
+                          "customer": {
+                            "type": "object",
+                            "properties": {
+                              "customer_name": {
+                                "type": "string"
+                              },
+                              "customer_description": {},
+                              "customer_sla": {},
+                              "customer_id": {
+                                "type": "integer"
+                              },
+                              "client_uuid": {
+                                "type": "string"
+                              },
+                              "creation_date": {
+                                "type": "string"
+                              },
+                              "last_update_date": {
+                                "type": "string"
+                              },
+                              "custom_attributes": {}
+                            }
+                          },
+                          "classification": {
+                            "type": "object",
+                            "properties": {
+                              "name": {
+                                "type": "string"
+                              },
+                              "name_expanded": {
+                                "type": "string"
+                              },
+                              "description": {
+                                "type": "string"
+                              },
+                              "id": {
+                                "type": "integer"
+                              },
+                              "creation_date": {
+                                "type": "string"
+                              }
+                            }
+                          },
+                          "owner": {},
+                          "iocs": {
+                            "type": "array"
+                          },
+                          "assets": {
+                            "type": "array"
+                          },
+                          "resolution_status": {},
+                          "cases": {
+                            "type": "array"
+                          },
+                          "comments": {
+                            "type": "array"
+                          },
+                          "alert_id": {
+                            "type": "integer"
+                          },
+                          "alert_uuid": {
+                            "type": "string"
+                          },
+                          "alert_title": {
+                            "type": "string"
+                          },
+                          "alert_description": {
+                            "type": "string"
+                          },
+                          "alert_source": {
+                            "type": "string"
+                          },
+                          "alert_source_ref": {
+                            "type": "string"
+                          },
+                          "alert_source_link": {
+                            "type": "string"
+                          },
+                          "alert_source_content": {
+                            "type": "object",
+                            "properties": {
+                              "_id": {
+                                "type": "string"
+                              },
+                              "contextId": {
+                                "type": "string"
+                              },
+                              "description": {
+                                "type": "string"
+                              },
+                              "entities": {
+                                "type": "array"
+                              },
+                              "title": {
+                                "type": "string"
+                              },
+                              "URL": {
+                                "type": "string"
+                              }
+                            }
+                          },
+                          "alert_severity_id": {
+                            "type": "integer"
+                          },
+                          "alert_status_id": {
+                            "type": "integer"
+                          },
+                          "alert_context": {
+                            "type": "object",
+                            "properties": {
+                              "context_key": {
+                                "type": "string"
+                              }
+                            }
+                          },
+                          "alert_source_event_time": {
+                            "type": "string"
+                          },
+                          "alert_creation_time": {
+                            "type": "string"
+                          },
+                          "alert_note": {
+                            "type": "string"
+                          },
+                          "alert_tags": {
+                            "type": "string"
+                          },
+                          "alert_owner_id": {},
+                          "modification_history": {
+                            "type": "object",
+                            "properties": {
+                              "1737133159.891611": {
+                                "type": "object",
+                                "properties": {
+                                  "user": {
+                                    "type": "string"
+                                  },
+                                  "user_id": {
+                                    "type": "integer"
+                                  },
+                                  "action": {
+                                    "type": "string"
+                                  }
+                                }
+                              }
+                            }
+                          },
+                          "alert_customer_id": {
+                            "type": "integer"
+                          },
+                          "alert_classification_id": {
+                            "type": "integer"
+                          },
+                          "alert_resolution_status_id": {}
+                        }
+                      }
+                    },
+                    "required": [
+                      "status",
+                      "message",
+                      "data"
+                    ]
+                  }
+                }
+              }
+            },
+            "Update_incident": {
+              "runAfter": {
+                "Parse_JSON": [
+                  "Succeeded"
+                ]
+              },
+              "type": "ApiConnection",
+              "inputs": {
+                "host": {
+                  "connection": {
+                    "name": "@parameters('$connections')['azuresentinel-1']['connectionId']"
+                  }
+                },
+                "method": "put",
+                "body": {
+                  "incidentArmId": "@triggerBody()?['object']?['id']",
+                  "tagsToAdd": {
+                    "TagsToAdd": [
+                      {
+                        "Tag": "@{concat('SOC-', body('Parse_JSON')?[0]?['data']?['alert_id'])\n}"
+                      }
+                    ]
+                  }
+                },
+                "path": "/Incidents"
+              }
+            },
+            "Parse_JSON_-_Severity": {
+              "runAfter": {},
+              "type": "ParseJson",
+              "inputs": {
+                "content": "@parameters('SeverityMapping')",
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "type": "object",
+                    "properties": {
+                      "sentinel": {
+                        "type": "string"
+                      },
+                      "iris": {
+                        "type": "integer"
+                      }
+                    },
+                    "required": [
+                      "sentinel",
+                      "iris"
+                    ]
+                  }
+                }
+              }
+            },
+            "Filter_array": {
+              "runAfter": {
+                "Parse_JSON_-_Severity": [
+                  "Succeeded"
+                ]
+              },
+              "type": "Query",
+              "inputs": {
+                "from": "@body('Parse_JSON_-_Severity')",
+                "where": "@equals(item()['sentinel'],triggerBody()?['object']?['properties']?['severity'])"
+              }
+            },
+            "For_each": {
+              "foreach": "@outputs('Filter_array')['body']",
+              "actions": {
+                "HTTP_-_Create_Alert": {
+                  "type": "Http",
+                  "inputs": {
+                    "uri": "http://20.224.56.0:8000/alerts/add",
+                    "method": "POST",
+                    "body": {
+                      "alert_title": "@{triggerBody()?['object']?['properties']?['title']}",
+                      "alert_description": "@{triggerBody()?['object']?['properties']?['description']}",
+                      "alert_source": "Microsoft Sentinel",
+                      "alert_source_ref": "@{triggerBody()?['object']?['properties']?['incidentNumber']}",
+                      "alert_source_link": "@{triggerBody()?['object']?['properties']?['incidentUrl']}",
+                      "alert_source_content": {
+                        "_id": "",
+                        "contextId": "@{triggerBody()?['object']?['id']}",
+                        "description": "",
+                        "entities": [],
+                        "title": "",
+                        "URL": ""
+                      },
+                      "alert_severity_id": "@items('For_each')['iris']",
+                      "alert_status_id": 2,
+                      "alert_context": {
+                        "context_key": "context_value"
+                      },
+                      "alert_source_event_time": "@{triggerBody()?['object']?['properties']?['createdTimeUtc']}",
+                      "alert_note": "alert note",
+                      "alert_tags": "defender,anothertag",
+                      "alert_iocs": [],
+                      "alert_assets": [],
+                      "alert_customer_id": 1,
+                      "alert_classification_id": 2
+                    },
+                    "authentication": {
+                      "type": "Raw",
+                      "value": "Bearer PFz20T-b5kxeBl35qf5fy81sqjR5uaJ4uQ5ViWQo7l_MnzXljdU2YDqtsZQ32dUONm1JsWkb0aflQyaJ2Z5yMg"
+                    }
+                  },
+                  "runtimeConfiguration": {
+                    "contentTransfer": {
+                      "transferMode": "Chunked"
+                    }
+                  }
+                }
+              },
+              "runAfter": {
+                "Filter_array": [
+                  "Succeeded"
+                ]
+              },
+              "type": "Foreach"
+            }
+          },
+          "outputs": {}
+        },
+        "parameters": {
+          "$connections": {
+            "value": {
+              "azuresentinel-1": {
+                "id": "[subscriptionResourceId('Microsoft.Web/locations/managedApis',resourceGroup().location,'azuresentinel')]",
+                "connectionId": "[resourceId('Microsoft.Web/connections','SentinelConnection')]",
+                "connectionName": "SentinelConnection",
+                "connectionProperties": {
+                  "authentication": {
+                    "type": "ManagedServiceIdentity"
+                  }
+                }
+              }
+            }
+          }
+        }
+      },
+      "apiVersion": "2017-07-01",
+      "name": "Iris-Sync-Incidents",
+      "type": "Microsoft.Logic/workflows",
+      "location": "[resourceGroup().location]",
+      "dependsOn": [
+        "SentinelSync",
+        "sentinelconnection"
+      ],
+      "identity": {
+        "type": "UserAssigned",
+        "userAssignedIdentities": {
+          "[resourceId('Microsoft.ManagedIdentity/UserAssignedIdentities', 'SentinelSync')]": {}
+        }
+      }
+    },
+    "IrisSyncIncidentSeverity": {
+      "properties": {
+        "state": "Enabled",
+        "version": "08584596183059855785",
+        "accessEndpoint": "https://prod-219.westeurope.logic.azure.com:443/workflows/ba0b6613a4a54bdbb8300ea107859329",
+        "definition": {
+          "$schema": "https://schema.management.azure.com/providers/Microsoft.Logic/schemas/2016-06-01/workflowdefinition.json#",
+          "contentVersion": "1.0.0.0",
+          "parameters": {
+            "IrisIPaddress": {
+              "defaultValue": "[parameters('IrisIPaddress')]",
+              "type": "String"
+            },
+            "API key admin ig": {
+              "defaultValue": "[parameters('API key admin ig')]",
+              "type": "String"
+            },
+            "$connections": {
+              "defaultValue": {},
+              "type": "Object"
+            }
+          },
+          "triggers": {
+            "Microsoft_Sentinel_incident": {
+              "type": "ApiConnectionWebhook",
+              "inputs": {
+                "host": {
+                  "connection": {
+                    "name": "@parameters('$connections')['azuresentinel-1']['connectionId']"
+                  }
+                },
+                "body": {
+                  "callback_url": "@listCallbackUrl()"
+                },
+                "path": "/incident-creation"
+              }
+            }
+          },
+          "actions": {
+            "For_each_tag": {
+              "foreach": "@triggerBody()?['object']?['properties']?['labels']",
+              "actions": {
+                "Condition_-_SOC_tag": {
+                  "actions": {
+                    "Switch_-_Incident_sev": {
+                      "cases": {
+                        "Low": {
+                          "case": "Low",
+                          "actions": {
+                            "HTTP_set_to_Low": {
+                              "type": "Http",
+                              "inputs": {
+                                "uri": "http://@{parameters('IrisIPaddress')}:8000/alerts/update/@{last(split(item()?['labelName'], '-'))}",
+                                "method": "POST",
+                                "body": {
+                                  "alert_severity_id": 4
+                                },
+                                "authentication": {
+                                  "type": "Raw",
+                                  "value": "Bearer @{parameters('API key admin ig')}"
+                                }
+                              },
+                              "runtimeConfiguration": {
+                                "contentTransfer": {
+                                  "transferMode": "Chunked"
+                                }
+                              }
+                            }
+                          }
+                        },
+                        "Medium": {
+                          "case": "Medium",
+                          "actions": {
+                            "HTTP_set_to_Medium": {
+                              "type": "Http",
+                              "inputs": {
+                                "uri": "http://@{parameters('IrisIPaddress')}:8000/alerts/update/@{last(split(item()?['labelName'], '-'))}",
+                                "method": "POST",
+                                "body": {
+                                  "alert_severity_id": 1
+                                },
+                                "authentication": {
+                                  "type": "Raw",
+                                  "value": "Bearer @{parameters('API key admin ig')}"
+                                }
+                              },
+                              "runtimeConfiguration": {
+                                "contentTransfer": {
+                                  "transferMode": "Chunked"
+                                }
+                              }
+                            }
+                          }
+                        },
+                        "High": {
+                          "case": "High",
+                          "actions": {
+                            "HTTP_set_to_High": {
+                              "type": "Http",
+                              "inputs": {
+                                "uri": "http://@{parameters('IrisIPaddress')}:8000/alerts/update/@{last(split(item()?['labelName'], '-'))}",
+                                "method": "POST",
+                                "body": {
+                                  "alert_severity_id": 5
+                                },
+                                "authentication": {
+                                  "type": "Raw",
+                                  "value": "Bearer @{parameters('API key admin ig')}"
+                                }
+                              },
+                              "runtimeConfiguration": {
+                                "contentTransfer": {
+                                  "transferMode": "Chunked"
+                                }
+                              }
+                            }
+                          }
+                        },
+                        "Informational": {
+                          "case": "Informational",
+                          "actions": {
+                            "HTTP_set_to_Informational": {
+                              "type": "Http",
+                              "inputs": {
+                                "uri": "http://@{parameters('IrisIPaddress')}:8000/alerts/update/@{last(split(item()?['labelName'], '-'))}",
+                                "method": "POST",
+                                "body": {
+                                  "alert_severity_id": 3
+                                },
+                                "authentication": {
+                                  "type": "Raw",
+                                  "value": "Bearer @{parameters('API key admin ig')}"
+                                }
+                              },
+                              "runtimeConfiguration": {
+                                "contentTransfer": {
+                                  "transferMode": "Chunked"
+                                }
+                              }
+                            }
+                          }
+                        }
+                      },
+                      "default": {
+                        "actions": {}
+                      },
+                      "expression": "@triggerBody()?['object']?['properties']?['severity']",
+                      "type": "Switch"
+                    }
+                  },
+                  "else": {
+                    "actions": {}
+                  },
+                  "expression": {
+                    "and": [
+                      {
+                        "contains": [
+                          "@item()?['labelName']",
+                          "SOC-"
+                        ]
+                      }
+                    ]
+                  },
+                  "type": "If"
+                }
+              },
+              "runAfter": {},
+              "type": "Foreach"
+            }
+          },
+          "outputs": {}
+        },
+        "parameters": {
+          "$connections": {
+            "value": {
+              "azuresentinel-1": {
+                "id": "[subscriptionResourceId('Microsoft.Web/locations/managedApis',resourceGroup().location,'azuresentinel')]",
+                "connectionId": "[resourceId('Microsoft.Web/connections','SentinelConnection')]",
+                "connectionName": "SentinelConnection",
+                "connectionProperties": {
+                  "authentication": {
+                    "type": "ManagedServiceIdentity"
+                  }
+                }
+              }
+            }
+          }
+        }
+      },
+      "apiVersion": "2017-07-01",
+      "name": "Iris-Sync-IncidentSeverity",
+      "type": "Microsoft.Logic/workflows",
+      "location": "[resourceGroup().location]",
+      "identity": {
+        "type": "UserAssigned",
+        "userAssignedIdentities": {
+          "[resourceId('Microsoft.ManagedIdentity/UserAssignedIdentities', 'SentinelSync')]": {}
+        }
+      },
+      "dependsOn": [
+        "SentinelSync",
+        "sentinelconnection"
+      ]
+    },
+    "IrisSyncIncidentOwner": {
+      "properties": {
+        "state": "Enabled",
+        "version": "08584592010869187727",
+        "accessEndpoint": "https://prod-247.westeurope.logic.azure.com:443/workflows/0d9992fa7f3045cda803ddbbab85abc1",
+        "definition": {
+          "$schema": "https://schema.management.azure.com/providers/Microsoft.Logic/schemas/2016-06-01/workflowdefinition.json#",
+          "contentVersion": "1.0.0.0",
+          "parameters": {
+            "$connections": {
+              "defaultValue": {},
+              "type": "Object"
+            }
+          },
+          "triggers": {
+            "Microsoft_Sentinel_incident": {
+              "type": "ApiConnectionWebhook",
+              "inputs": {
+                "host": {
+                  "connection": {
+                    "name": "@parameters('$connections')['azuresentinel-1']['connectionId']"
+                  }
+                },
+                "body": {
+                  "callback_url": "@listCallbackUrl()"
+                },
+                "path": "/incident-creation"
+              }
+            }
+          },
+          "actions": {
+            "For_each_tag": {
+              "foreach": "@triggerBody()?['object']?['properties']?['labels']",
+              "actions": {
+                "Condition_SOC_tag": {
+                  "actions": {
+                    "HTTP_List_users": {
+                      "type": "Http",
+                      "inputs": {
+                        "uri": "http://20.224.56.0:8000/manage/users/list",
+                        "method": "GET",
+                        "authentication": {
+                          "type": "Raw",
+                          "value": "Bearer PFz20T-b5kxeBl35qf5fy81sqjR5uaJ4uQ5ViWQo7l_MnzXljdU2YDqtsZQ32dUONm1JsWkb0aflQyaJ2Z5yMg"
+                        }
+                      },
+                      "runtimeConfiguration": {
+                        "contentTransfer": {
+                          "transferMode": "Chunked"
+                        }
+                      }
+                    },
+                    "Compose_Sentinel_username_from_UPN": {
+                      "runAfter": {
+                        "HTTP_List_users": [
+                          "Succeeded"
+                        ]
+                      },
+                      "type": "Compose",
+                      "inputs": "@substring(triggerBody()?['object']?['properties']?['owner']?['userPrincipalName'], 0, indexOf(triggerBody()?['object']?['properties']?['owner']?['userPrincipalName'], '@'))"
+                    },
+                    "For_each_user": {
+                      "foreach": "@body('HTTP_List_users')?['data']",
+                      "actions": {
+                        "Condition_-_matching_username": {
+                          "actions": {
+                            "HTTP_-_update_owner": {
+                              "type": "Http",
+                              "inputs": {
+                                "uri": "http://20.224.56.0:8000/alerts/update/@{last(split(triggerBody()?['object']?['properties']['labels']?[0]?['labelName'], '-'))}",
+                                "method": "POST",
+                                "body": {
+                                  "alert_owner_id": "@items('For_each_user')?['user_id']"
+                                },
+                                "authentication": {
+                                  "type": "Raw",
+                                  "value": "Bearer PFz20T-b5kxeBl35qf5fy81sqjR5uaJ4uQ5ViWQo7l_MnzXljdU2YDqtsZQ32dUONm1JsWkb0aflQyaJ2Z5yMg"
+                                }
+                              },
+                              "runtimeConfiguration": {
+                                "contentTransfer": {
+                                  "transferMode": "Chunked"
+                                }
+                              }
+                            }
+                          },
+                          "else": {
+                            "actions": {}
+                          },
+                          "expression": {
+                            "and": [
+                              {
+                                "equals": [
+                                  "@items('For_each_user')?['user_login']",
+                                  "@outputs('Compose_Sentinel_username_from_UPN')"
+                                ]
+                              }
+                            ]
+                          },
+                          "type": "If"
+                        }
+                      },
+                      "runAfter": {
+                        "Compose_Sentinel_username_from_UPN": [
+                          "Succeeded"
+                        ]
+                      },
+                      "type": "Foreach"
+                    }
+                  },
+                  "else": {
+                    "actions": {}
+                  },
+                  "expression": {
+                    "and": [
+                      {
+                        "contains": [
+                          "@item()?['labelName']",
+                          "SOC-"
+                        ]
+                      }
+                    ]
+                  },
+                  "type": "If"
+                }
+              },
+              "runAfter": {},
+              "type": "Foreach"
+            }
+          },
+          "outputs": {}
+        },
+        "parameters": {
+          "$connections": {
+            "value": {
+              "azuresentinel-1": {
+                "id": "[subscriptionResourceId('Microsoft.Web/locations/managedApis',resourceGroup().location,'azuresentinel')]",
+                "connectionId": "[resourceId('Microsoft.Web/connections','SentinelConnection')]",
+                "connectionName": "SentinelConnection",
+                "connectionProperties": {
+                  "authentication": {
+                    "type": "ManagedServiceIdentity"
+                  }
+                }
+              }
+            }
+          }
+        }
+      },
+      "apiVersion": "2017-07-01",
+      "name": "Iris-Sync-IncidentOwner",
+      "type": "Microsoft.Logic/workflows",
+      "location": "[resourceGroup().location]",
+      "identity": {
+        "type": "UserAssigned",
+        "userAssignedIdentities": {
+          "[resourceId('Microsoft.ManagedIdentity/UserAssignedIdentities', 'SentinelSync')]": {}
+        }
+      },
+      "dependsOn": [
+        "SentinelSync",
+        "sentinelconnection"
+      ]
+    },
+    "IrisSyncIncidentComments": {
+      "properties": {
+        "state": "Enabled",
+        "version": "08584596184395489466",
+        "accessEndpoint": "https://prod-246.westeurope.logic.azure.com:443/workflows/159f8688be62489eb7b30dc324736126",
+        "definition": {
+          "$schema": "https://schema.management.azure.com/providers/Microsoft.Logic/schemas/2016-06-01/workflowdefinition.json#",
+          "contentVersion": "1.0.0.0",
+          "parameters": {
+            "$connections": {
+              "defaultValue": {},
+              "type": "Object"
+            }
+          },
+          "triggers": {
+            "Microsoft_Sentinel_incident": {
+              "type": "ApiConnectionWebhook",
+              "inputs": {
+                "host": {
+                  "connection": {
+                    "name": "@parameters('$connections')['azuresentinel-1']['connectionId']"
+                  }
+                },
+                "body": {
+                  "callback_url": "@listCallbackUrl()"
+                },
+                "path": "/incident-creation"
+              }
+            }
+          },
+          "actions": {
+            "For_each_tag": {
+              "foreach": "@triggerBody()?['object']?['properties']?['labels']",
+              "actions": {
+                "Condition_-_SOC_tag": {
+                  "actions": {
+                    "For_each_comment": {
+                      "foreach": "@triggerBody()?['incidentUpdates']?['comments']",
+                      "actions": {
+                        "HTTP_add_comment": {
+                          "type": "Http",
+                          "inputs": {
+                            "uri": "http://20.224.56.0:8000/alerts/@{last(split(items('For_each_tag')?['labelName'], '-'))}/comments/add",
+                            "method": "POST",
+                            "body": {
+                              "comment_text": "@{items('For_each_comment')?['properties']?['message']}"
+                            },
+                            "authentication": {
+                              "type": "Raw",
+                              "value": "Bearer PFz20T-b5kxeBl35qf5fy81sqjR5uaJ4uQ5ViWQo7l_MnzXljdU2YDqtsZQ32dUONm1JsWkb0aflQyaJ2Z5yMg"
+                            }
+                          },
+                          "runtimeConfiguration": {
+                            "contentTransfer": {
+                              "transferMode": "Chunked"
+                            }
+                          }
+                        }
+                      },
+                      "type": "Foreach"
+                    }
+                  },
+                  "else": {
+                    "actions": {}
+                  },
+                  "expression": {
+                    "and": [
+                      {
+                        "contains": [
+                          "@item()?['labelName']",
+                          "SOC-"
+                        ]
+                      }
+                    ]
+                  },
+                  "type": "If"
+                }
+              },
+              "runAfter": {},
+              "type": "Foreach"
+            }
+          },
+          "outputs": {}
+        },
+        "parameters": {
+          "$connections": {
+            "value": {
+              "azuresentinel-1": {
+                "id": "[subscriptionResourceId('Microsoft.Web/locations/managedApis',resourceGroup().location,'azuresentinel')]",
+                "connectionId": "[resourceId('Microsoft.Web/connections','SentinelConnection')]",
+                "connectionName": "SentinelConnection",
+                "connectionProperties": {
+                  "authentication": {
+                    "type": "ManagedServiceIdentity"
+                  }
+                }
+              }
+            }
+          }
+        }
+      },
+      "apiVersion": "2017-07-01",
+      "name": "Iris-Sync-IncidentComments",
+      "type": "Microsoft.Logic/workflows",
+      "location": "[resourceGroup().location]",
+      "identity": {
+        "type": "UserAssigned",
+        "userAssignedIdentities": {
+          "[resourceId('Microsoft.ManagedIdentity/UserAssignedIdentities', 'SentinelSync')]": {}
+        }
+      },
+      "dependsOn": [
+        "SentinelSync",
+        "sentinelconnection"
+      ]
+    },
+    "IrisHTTPListener": {
+      "properties": {
+        "state": "Enabled",
+        "version": "08584591954088152040",
+        "accessEndpoint": "https://prod-92.westeurope.logic.azure.com:443/workflows/e017418303f84d75a647b9691968c0fc",
+        "definition": {
+          "$schema": "https://schema.management.azure.com/providers/Microsoft.Logic/schemas/2016-06-01/workflowdefinition.json#",
+          "contentVersion": "1.0.0.0",
+          "parameters": {
+            "ResolutionMapping": {
+              "defaultValue": "[parameters('ResolutionMapping')]",
+              "type": "Array"
+            },
+            "SeverityMapping": {
+              "defaultValue": "[parameters('SeverityMapping')]",
+              "type": "Array"
+            },
+            "UserMapping": {
+              "defaultValue": "[parameters('UserMapping')]",
+              "type": "Array"
+            },
+            "$connections": {
+              "defaultValue": {},
+              "type": "Object"
+            }
+          },
+          "triggers": {
+            "When_a_HTTP_request_is_received": {
+              "type": "Request",
+              "kind": "Http",
+              "inputs": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "message": {
+                      "type": "string"
+                    },
+                    "additional_data": {
+                      "type": "string"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "actions": {
+            "Switch_-_status": {
+              "runAfter": {},
+              "cases": {
+                "In_progress": {
+                  "case": "In progress",
+                  "actions": {
+                    "Update_incident": {
+                      "type": "ApiConnection",
+                      "inputs": {
+                        "host": {
+                          "connection": {
+                            "name": "@parameters('$connections')['azuresentinel']['connectionId']"
+                          }
+                        },
+                        "method": "put",
+                        "body": {
+                          "incidentArmId": "@triggerBody()['alert_raw'][0]['alert_source_content']['contextId']",
+                          "status": "Active"
+                        },
+                        "path": "/Incidents"
+                      }
+                    }
+                  }
+                },
+                "Closed": {
+                  "case": "Closed",
+                  "actions": {
+                    "Parse_JSON": {
+                      "type": "ParseJson",
+                      "inputs": {
+                        "content": "@parameters('ResolutionMapping')",
+                        "schema": {
+                          "type": "array",
+                          "items": {
+                            "type": "object",
+                            "properties": {
+                              "sentinel": {
+                                "type": "string"
+                              },
+                              "iris": {
+                                "type": "string"
+                              }
+                            },
+                            "required": [
+                              "sentinel",
+                              "iris"
+                            ]
+                          }
+                        }
+                      }
+                    },
+                    "Filter_array": {
+                      "runAfter": {
+                        "Parse_JSON": [
+                          "Succeeded"
+                        ]
+                      },
+                      "type": "Query",
+                      "inputs": {
+                        "from": "@body('Parse_JSON')",
+                        "where": "@equals(item()['iris'],triggerBody()?['alert_raw']?[0]?['resolution_status']?['resolution_status_name'])"
+                      }
+                    },
+                    "For_each": {
+                      "foreach": "@outputs('Filter_array')['body']",
+                      "actions": {
+                        "Update_incident_1": {
+                          "type": "ApiConnection",
+                          "inputs": {
+                            "host": {
+                              "connection": {
+                                "name": "@parameters('$connections')['azuresentinel']['connectionId']"
+                              }
+                            },
+                            "method": "put",
+                            "body": {
+                              "incidentArmId": "@triggerBody()['alert_raw'][0]['alert_source_content']['contextId']",
+                              "status": "Closed",
+                              "classification": {
+                                "ClassificationAndReason": "@items('For_each')['sentinel']",
+                                "ClassificationReasonText": "@triggerBody()?['alert_raw']?[0]?['alert_note']"
+                              }
+                            },
+                            "path": "/Incidents"
+                          }
+                        }
+                      },
+                      "runAfter": {
+                        "Filter_array": [
+                          "Succeeded"
+                        ]
+                      },
+                      "type": "Foreach"
+                    }
+                  }
+                },
+                "Pending": {
+                  "case": "Pending",
+                  "actions": {}
+                }
+              },
+              "default": {
+                "actions": {}
+              },
+              "expression": "@triggerBody()['alert_raw'][0]['status']['status_name']",
+              "type": "Switch"
+            },
+            "Parse_JSON_1": {
+              "runAfter": {
+                "Switch_-_status": [
+                  "Succeeded"
+                ]
+              },
+              "type": "ParseJson",
+              "inputs": {
+                "content": "@parameters('SeverityMapping')",
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "type": "object",
+                    "properties": {
+                      "sentinel": {
+                        "type": "string"
+                      },
+                      "iris": {
+                        "type": "string"
+                      }
+                    },
+                    "required": [
+                      "sentinel",
+                      "iris"
+                    ]
+                  }
+                }
+              }
+            },
+            "Filter_array_1": {
+              "runAfter": {
+                "Parse_JSON_1": [
+                  "Succeeded"
+                ]
+              },
+              "type": "Query",
+              "inputs": {
+                "from": "@body('Parse_JSON_1')",
+                "where": "@equals(item()['iris'],triggerBody()?['alert_raw']?[0]?['severity']?['severity_name'])"
+              }
+            },
+            "For_each_1": {
+              "foreach": "@body('Filter_array_1')",
+              "actions": {
+                "Update_incident_2": {
+                  "type": "ApiConnection",
+                  "inputs": {
+                    "host": {
+                      "connection": {
+                        "name": "@parameters('$connections')['azuresentinel']['connectionId']"
+                      }
+                    },
+                    "method": "put",
+                    "body": {
+                      "incidentArmId": "@triggerBody()['alert_raw'][0]['alert_source_content']['contextId']",
+                      "severity": "@items('For_each_1')['sentinel']"
+                    },
+                    "path": "/Incidents"
+                  }
+                }
+              },
+              "runAfter": {
+                "Filter_array_1": [
+                  "Succeeded"
+                ]
+              },
+              "type": "Foreach"
+            },
+            "Parse_User_Mapping": {
+              "runAfter": {
+                "For_each_1": [
+                  "Succeeded"
+                ]
+              },
+              "type": "ParseJson",
+              "inputs": {
+                "content": "@parameters('UserMapping')",
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "type": "object",
+                    "properties": {
+                      "sentinel": {
+                        "type": "string"
+                      },
+                      "iris": {
+                        "type": "string"
+                      },
+                      "filip.vytiska": {
+                        "type": "string"
+                      }
+                    },
+                    "required": [
+                      "iris"
+                    ]
+                  }
+                }
+              }
+            },
+            "For_each_2": {
+              "foreach": "@body('Filter_assignee')",
+              "actions": {
+                "Update_incident_3": {
+                  "type": "ApiConnection",
+                  "inputs": {
+                    "host": {
+                      "connection": {
+                        "name": "@parameters('$connections')['azuresentinel']['connectionId']"
+                      }
+                    },
+                    "method": "put",
+                    "body": {
+                      "incidentArmId": "@triggerBody()['alert_raw'][0]['alert_source_content']['contextId']",
+                      "ownerAction": "Assign",
+                      "owner": "@items('For_each_2')['sentinel']"
+                    },
+                    "path": "/Incidents"
+                  }
+                }
+              },
+              "runAfter": {
+                "Filter_assignee": [
+                  "Succeeded"
+                ]
+              },
+              "type": "Foreach"
+            },
+            "Filter_assignee": {
+              "runAfter": {
+                "Parse_User_Mapping": [
+                  "Succeeded"
+                ]
+              },
+              "type": "Query",
+              "inputs": {
+                "from": "@body('Parse_User_Mapping')",
+                "where": "@equals(item()['iris'],triggerBody()?['alert_raw']?[0]?['owner']?['user_login'])"
+              }
+            }
+          },
+          "outputs": {}
+        },
+        "parameters": {
+          "$connections": {
+            "value": {
+              "azuresentinel": {
+                "id": "[subscriptionResourceId('Microsoft.Web/locations/managedApis',resourceGroup().location,'azuresentinel')]",
+                "connectionId": "[resourceId('Microsoft.Web/connections','SentinelConnection')]",
+                "connectionName": "SentinelConnection",
+                "connectionProperties": {
+                  "authentication": {
+                    "type": "ManagedServiceIdentity"
+                  }
+                }
+              }
+            }
+          }
+        }
+      },
+      "apiVersion": "2017-07-01",
+      "name": "Iris-HTTP-Listener",
+      "type": "Microsoft.Logic/workflows",
+      "location": "[resourceGroup().location]",
+      "identity": {
+        "type": "UserAssigned",
+        "userAssignedIdentities": {
+          "[resourceId('Microsoft.ManagedIdentity/UserAssignedIdentities', 'SentinelSync')]": {}
+        }
+      },
+      "dependsOn": [
+        "SentinelSync",
+        "sentinelconnection"
+      ]
+    }
+  }
+}
