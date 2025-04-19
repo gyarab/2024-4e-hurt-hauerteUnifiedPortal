@@ -10,7 +10,8 @@ Integration between Microsoft's SIEM - **Azure Sentinel** and **IRIS** - Open-So
 
 ### 📁 Branch Structure
 
-- **Main Branch:** Contains Azure Logic Apps definitions in `.json` format.  
+- **Main Branch:** Contains the main focus of this project - Azure Logic Apps written in `.json` format by me.
+- **SLA-feature-v2:** Contains all of my code used in IRIS. 
 - **Master/Develop Branches:** Hold the IRIS code.
 
 ---
