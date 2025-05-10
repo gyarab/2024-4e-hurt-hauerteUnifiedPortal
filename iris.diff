@@ -1,0 +1,951 @@
+=================
+diff header
+This diff describes changes made in comparison to iris version v2.4.13
+=================
+
+
+diff --git a/source/app/blueprints/pages/alerts/alerts_routes.py b/source/app/blueprints/pages/alerts/alerts_routes.py
+index 00d7e100..905e0f2f 100644
+--- a/source/app/blueprints/pages/alerts/alerts_routes.py
++++ b/source/app/blueprints/pages/alerts/alerts_routes.py
+@@ -31,6 +31,16 @@ from app.models.authorization import Permissions
+ from app.blueprints.responses import response_error
+ from app.blueprints.access_controls import ac_requires
+ 
++
++from app.datamgmt.client.client_db import get_clients_sla
++from app.blueprints.responses import response_success
++
++from app.blueprints.access_controls import ac_api_requires
++
++from app.datamgmt.alerts.alerts_db import get_elapsed_sla
++
++from app.datamgmt.alerts.alerts_db import set_elapsed_sla
++
+ alerts_blueprint = Blueprint(
+     'alerts',
+     __name__,
+@@ -57,6 +67,37 @@ def alerts_list_view_route(caseid, url_redir) -> Union[str, Response]:
+ 
+     return render_template('alerts.html', caseid=caseid, form=form)
+ 
++#later move this to source/app/blueprints/rest/alerts_routes.py
++@alerts_blueprint.route('/alerts/api/get_clients_sla_api', methods=['GET'])
++@ac_api_requires()
++def get_clients_sla_api():
++    rows= get_clients_sla()
++    customers = [dict(row._mapping) for row in rows]
++    output = {
++        "customers_sla": customers
++    }
++
++    return response_success(data=output)
++
++#later move this to source/app/blueprints/rest/alerts_routes.py
++@alerts_blueprint.route('/alerts/api/get_elapsed_sla_api/<int:alert_id>', methods=['GET'])
++@ac_api_requires()
++def get_elapsed_sla_api(alert_id: int):
++    elapsed_sla = get_elapsed_sla(alert_id)
++    #output = {
++     #   "elapsed_sla": elapsed_sla
++    #}
++
++    return response_success(data=elapsed_sla)
++
++#later move this to source/app/blueprints/rest/alerts_routes.py
++@alerts_blueprint.route('/alerts/api/set_elapsed_sla_api/<int:alert_id>/<int:new_elapsed_sla>', methods=['GET'])
++@ac_api_requires(Permissions.alerts_write)
++def set_elapsed_sla_api(alert_id: int, new_elapsed_sla: int):
++    updated_alert = set_elapsed_sla(alert_id, new_elapsed_sla)
++    return response_success(data=updated_alert)
++
++
+ 
+ @alerts_blueprint.route('/alerts/<int:cur_id>/comments/modal', methods=['GET'])
+ @ac_requires(Permissions.alerts_read, no_cid_required=True)
+
+=================
+functions get_elapsed_sla and set_elapsed_sla wrtie directly to the SQL db
+=================
+
+diff --git a/source/app/datamgmt/alerts/alerts_db.py b/source/app/datamgmt/alerts/alerts_db.py
+index d7879240..0d4e27a4 100644
+--- a/source/app/datamgmt/alerts/alerts_db.py
++++ b/source/app/datamgmt/alerts/alerts_db.py
+@@ -1566,3 +1566,20 @@ def get_alert_status_by_name(name: str) -> AlertStatus:
+     """
+     return AlertStatus.query.filter(AlertStatus.status_name == name).first()
+ 
++
++def get_elapsed_sla(alert_id: int) -> Alert:
++    elapsed_sla = Alert.query.filter(Alert.alert_id == alert_id).first()
++    return elapsed_sla
++
++def set_elapsed_sla(alert_id: int, new_elapsed_sla: int):
++    alert = Alert.query.filter(Alert.alert_id == alert_id).first()
++    if alert:
++        # Update the column with the new value
++        alert.alert_elapsed_sla = new_elapsed_sla
++        # Commit the changes to the database
++        db.session.commit()
++        return alert
++    else:
++        # Optionally handle the case where no alert is found
++        return None
++
+
+=================
+functions for querying the data
+=================
+
+diff --git a/source/app/datamgmt/client/client_db.py b/source/app/datamgmt/client/client_db.py
+index 42437dbc..ed9ca862 100644
+--- a/source/app/datamgmt/client/client_db.py
++++ b/source/app/datamgmt/client/client_db.py
+@@ -55,6 +55,10 @@ def get_client_list(current_user_id: int = None,
+ 
+     return output
+ 
++def get_clients_sla():
++    client_data = Client.query.with_entities(Client.sla, Client.client_id).all()
++    return client_data
++
+ 
+ def get_client(client_id: int) -> Client:
+     client = Client.query.filter(Client.client_id == client_id).first()
+
+
+
+=================
+adding elapsed_sla attribute to Alert table model
+=================
+
+diff --git a/source/app/models/alerts.py b/source/app/models/alerts.py
+index 884e5646..859252b0 100644
+--- a/source/app/models/alerts.py
++++ b/source/app/models/alerts.py
+@@ -67,6 +67,7 @@ class Alert(db.Model):
+     alert_customer_id = Column(ForeignKey('client.client_id'), nullable=False)
+     alert_classification_id = Column(ForeignKey('case_classification.id'))
+     alert_resolution_status_id = Column(ForeignKey('alert_resolution_status.resolution_status_id'), nullable=True)
++    alert_elapsed_sla = Column(Integer, default=-1)
+ 
+     owner = relationship('User', foreign_keys=[alert_owner_id])
+     severity = relationship('Severity')
+
+
+=================
+Svelte code (JS) that imlements the ProgressBar, SLAbar, and SLA container
+components.
+=================
+
+diff --git a/ui/src/pages/ProgressBar.svelte b/ui/src/pages/ProgressBar.svelte
+index c28cfab3..0adc3dfa 100644
+--- a/ui/src/pages/ProgressBar.svelte
++++ b/ui/src/pages/ProgressBar.svelte
+@@ -1,143 +1,253 @@
+ <script lang="ts">
+-import { onDestroy } from 'svelte';
+-  const MyState ={
++	import {onDestroy, onMount} from 'svelte';
++
++  	export let alertStatusID;
++	export let alertID;
++
++	let dbElapsedSla;
++	let currstate;
++
++	onMount(async () => {
++		console.log("I JUST MOUNTED AGAIN MOTHERFUCKER");
++        dbElapsedSla = await fetchAlertSla();
++        console.log("DB_Data: ", dbElapsedSla);
++
++		currstate = MyState.RUNNING;
++
++      	start();
++
++	   cleanupEffect = () => clearInterval(interval);
++	});
++
++  	const MyState ={
+ 		NEW: 0,
+ 	  	RUNNING: 1,
+ 	    PAUSED: 2,
+-  };
+-  let currstate = MyState.RUNNING;
+-  //let { startDateTime = "01/02/2025 14:30", endDateTime = "01/02/2025 14:31" } = $props();
+-  export let startDateTime = "01/02/2025 14:30";
+-  export let endDateTime = "01/02/2025 14:30";
+-  let timecomputed = calculateDuration(); //calculate duration betwwen two timestamps in seconds
+-  //let elapsed = $state(0);
+-  $: elapsed = 0;
+-  //let duration = $state(timecomputed);
+-  $: duration = timecomputed;
+-  let interval: number
+-  let oldElapsedTime = 0;
+-  let currTimeEpoch = 0;
+-  let startTimeEpoch = getSecondsSinceEpoch(startDateTime);
+-  //let severity;
+-  function start() {
++  	};
++
++
++  	//let { startDateTime = "01/02/2025 14:30", endDateTime = "01/02/2025 14:31" } = $props();
++  	export let startDateTime = "01/02/2025 14:30";
++  	export let endDateTime = "01/02/2025 14:30";
++  	let timecomputed = calculateDuration(); //calculate duration betwwen two timestamps in seconds
++  	//let elapsed = $state(0);
++  	$: elapsed = 0;
++  	//let duration = $state(timecomputed);
++  	$: duration = timecomputed;
++  	let interval: number
++  	let oldElapsedTime = 0;
++  	let currTimeEpoch = 0;
++  	let startTimeEpoch = getSecondsSinceEpoch(startDateTime);
++  	$: SLAbreached = false;
++
++	function start() {
+ 	  interval = setInterval(() => {
++		  console.log("elapsed2 ", dbElapsedSla);
+ 		  if(currstate === MyState.RUNNING) {
+ 			  //calculate curr time
+ 			  currTimeEpoch = Math.floor((Date.now()) / (1000 * 60)) * 60;
+ 			  //startTimeEpoch = getSecondsSinceEpoch(startDateTime);
+ 				//console.log(currTimeEpoch);
+ 				//console.log(Math.floor((Date.now()) / (1000 * 60)) * 60);
+-			  elapsed = currTimeEpoch - startTimeEpoch + oldElapsedTime;
++			  if(dbElapsedSla < 0){ //
++				  elapsed = currTimeEpoch - startTimeEpoch + oldElapsedTime;
++				  console.log("elapsed: "+elapsed);
++			  }
++			  else { //SLA is not -1 therefore was completed sometime before
++				  elapsed = dbElapsedSla; //
++				  clearInterval(interval)
++				  currstate = MyState.PAUSED;
++			  }
++
+ 			  if (elapsed > duration) {
+ 				  elapsed = duration
+ 				  clearInterval(interval)
++				  SLAbreached = true;
++			  }
++			  if (alertStatusID === 4){
++		  		complete();
+ 			  }
+ 		  }
+ 	  }, 1000)
+-  }
+-  function getSecondsSinceEpoch(dateString) {
+-	  // Split the input string into date and time parts
+-	  const [datePart, timePart] = dateString.split(' ');
+-	  // Split the date part into day, month, and year
+-	  const [day, month, year] = datePart.split('/');
+-	  // Split the time part into hours and minutes
+-	  const [hours, minutes] = timePart.split(':');
+-	  // Create a Date object (note: months are 0-based in JavaScript)
+-	  const date = new Date(year, month - 1, day, hours, minutes);
+-	  // Get the number of seconds since the Unix epoch
+-	  const secondsSinceEpoch = Math.floor(date.getTime() / 1000);
+-	  return secondsSinceEpoch;
+-  }
+-  function complete() {
+-	  //elapsed = 0
+-	  clearInterval(interval)
+-	  currstate = MyState.PAUSED;
+-	  //turn the shit green
+-  }
+-  function pause() {
+-	  currstate = MyState.PAUSED;
+-	  console.log("Paused!");
+-	  oldElapsedTime = elapsed;
+-  }
+-  function resume() {
+-	  currstate = MyState.RUNNING;
+-	  startTimeEpoch = (Math.floor((Date.now()) / (1000 * 60)) * 60);
+-	  console.log("Runing!");
+-  }
+-  /*
+-  $effect(() => {
+-	  if (!duration) return
+-	  start()
+-	  return () => clearInterval(interval)
+-  })
+-   */
+-  let cleanupEffect;
+-  $: {
+-    // Call the previous cleanup (if any) before re-running the effect
+-    if (cleanupEffect) cleanupEffect();
+-    if (!duration) {
+-      // No effect is set up if duration is falsy
+-      cleanupEffect = null;
+     }
+-    else {
+-      // Execute your effect
+-      start();
+-      // Set up the cleanup function
+-      cleanupEffect = () => clearInterval(interval);
++
++	function getSecondsSinceEpoch(dateString) {
++		// Split the input string into date and time parts
++		const [datePart, timePart] = dateString.split(' ');
++		// Split the date part into day, month, and year
++		const [day, month, year] = datePart.split('/');
++		// Split the time part into hours and minutes
++		const [hours, minutes] = timePart.split(':');
++		// Create a Date object (note: months are 0-based in JavaScript)
++		const date = new Date(year, month - 1, day, hours, minutes);
++		// Get the number of seconds since the Unix epoch
++		const secondsSinceEpoch = Math.floor(date.getTime() / 1000);
++		return secondsSinceEpoch;
++	}
++
++
++  	//this should actually fetch for column "alert_elapsed_sla"
++  	// it will either have -1 or other int value for SLA completed seconds
++  	async function fetchAlertSla() {
++        try {
++            const response = await fetch(`alerts/api/get_elapsed_sla_api/${alertID}`);
++            const data = await response.json();
++
++            // Declare the variable properly
++            const elapsedSla = data.data.alert_elapsed_sla;
++
++            return elapsedSla;
++        }
++        catch (error) {
++            console.error('Error fetching data:', error);
++            throw error;
++        }
+     }
+-  }
+-  onDestroy(() => {
+-    if (cleanupEffect) cleanupEffect();
+-  });
+-  function calculateDuration() {
+-	  try {
+-		  // Extract date and time components
+-		  let [date1, time1] = startDateTime.split(" ");
+-		  let [date2, time2] = endDateTime.split(" ");
+-		  let [d1, m1, y1] = date1.split("/").map(Number);
+-		  let [d2, m2, y2] = date2.split("/").map(Number);
+-		  let [h1, min1] = time1 ? time1.split(":").map(Number) : [0, 0];
+-		  let [h2, min2] = time2 ? time2.split(":").map(Number) : [0, 0];
+-		  // Convert to JS Date objects (JS months are 0-based)
+-		  let start = new Date(y1, m1 - 1, d1, h1, min1);
+-		  let end = new Date(y2, m2 - 1, d2, h2, min2);
+-		  let totalTime = 0;
+-		  // Calculate the difference in milliseconds
+-		  let diffMs = end - start;
+-		  if (diffMs < 0) {
+-			  totalTime = 0;
+-			  return;
+-		  }
+-		  // Convert milliseconds to days, hours, minutes, and seconds
+-		  let totalSeconds = Math.floor(diffMs / 1000);
+-		  //let days = Math.floor(totalSeconds / 86400);
+-		  //let hours = Math.floor((totalSeconds % 86400) / 3600);
+-            //let minutes = Math.floor((totalSeconds % 3600) / 60);
+-            //let seconds = totalSeconds % 60;
+-		  totalTime = totalSeconds;
+-		  return totalTime;
+-	  } catch (error) {
+-		  console.error("Invalid date format:", error);
+-	  }
+-  }
++
++	async function writeSlaData() {
++        try {
++            const response = await fetch(`alerts/api/set_elapsed_sla_api/${alertID}/${elapsed}`);
++
++            const result = await response.json();
++        	console.log('Update result:', result);
++        }
++        catch (error) {
++            console.error('Error fetching data:', error);
++            throw error;
++        }
++    }
++
++
++  	function complete() {
++	  	clearInterval(interval)
++	  	currstate = MyState.PAUSED;
++	  	if (elapsed < 0){
++		  	elapsed = 0;
++	  	}
++	  	console.log("elapsedFromComplete "+elapsed);
++	  	writeSlaData();
++  	}
++
++	function pause() {
++		currstate = MyState.PAUSED;
++		console.log("Paused!");
++		oldElapsedTime = elapsed;
++	}
++
++	function resume() {
++		currstate = MyState.RUNNING;
++		startTimeEpoch = (Math.floor((Date.now()) / (1000 * 60)) * 60);
++		console.log("Runing!");
++	}
++
++	let cleanupEffect;
++
++	onDestroy(() => {
++		if (cleanupEffect) cleanupEffect();
++	});
++
++	function calculateDuration() {
++		try {
++			// Extract date and time components
++			let [date1, time1] = startDateTime.split(" ");
++			let [date2, time2] = endDateTime.split(" ");
++			let [d1, m1, y1] = date1.split("/").map(Number);
++			let [d2, m2, y2] = date2.split("/").map(Number);
++			let [h1, min1] = time1 ? time1.split(":").map(Number) : [0, 0];
++			let [h2, min2] = time2 ? time2.split(":").map(Number) : [0, 0];
++			// Convert to JS Date objects (JS months are 0-based)
++			let start = new Date(y1, m1 - 1, d1, h1, min1);
++			let end = new Date(y2, m2 - 1, d2, h2, min2);
++			let totalTime = 0;
++			// Calculate the difference in milliseconds
++			let diffMs = end - start;
++			if (diffMs < 0) {
++				totalTime = 0;
++				return;
++			}
++			// Convert milliseconds to days, hours, minutes, and seconds
++			let totalSeconds = Math.floor(diffMs / 1000);
++			//let days = Math.floor(totalSeconds / 86400);
++			//let hours = Math.floor((totalSeconds % 86400) / 3600);
++			//let minutes = Math.floor((totalSeconds % 3600) / 60);
++			//let seconds = totalSeconds % 60;
++			totalTime = totalSeconds;
++			return totalTime;
++		} catch (error) {
++			console.error("Invalid date format:", error);
++		}
++	}
+     console.log(calculateDuration());
+ </script>
+ 
+ <div class="grid-gap">
+-	<div>
+-      <p>{startDateTime} - {endDateTime}</p>
+-		<label>
+-			<span>Elapsed time:</span>
+-			<progress max={duration} value={elapsed}></progress>
+-		</label>
+-
+-		<div>{elapsed.toFixed(1)}s</div>
++	<div class="progress-container col-md-12" style="display: flex;justify-content: center;">
++		<div class="col-md-12" style="padding-top: 5px;">
++			<div class="row col-md-12" style="display: flex;justify-content: center;">
++      			<p>{startDateTime} - {endDateTime}</p>
++			</div>
++
++			<div class="row col-md-12" style="display: flex;justify-content: center; padding-bottom: 5px;">
++				<span>Elapsed time:</span>
++			</div>
++
++			<label class="row col-md-12" style="display: flex;justify-content: center;">
++				<progress class:completed={currstate === MyState.PAUSED} class:breached={SLAbreached} max={duration} value={elapsed}></progress>
++			</label>
++
++			<div class="row col-md-12" style="display: flex;justify-content: center;">
++				<p>{elapsed.toFixed(1)}s</p>
++			</div>
++		</div>
+ 	</div>
+ 
+     {#if duration === elapsed}
+-        <p>SLA breached!</p>
++        <p class="row col-md-12" style="display: flex;justify-content: center;"><strong>SLA breached!</strong></p>
+ 	{/if}
+-	<button on:click={pause}>Pause</button>
+-	<button on:click={resume}>Resume</button>
+-	<button on:click={complete}>Complete</button>
+-</div>
+\ No newline at end of file
++</div>
++
++
++<style>
++	.progress-container {
++    width: 100%;
++    padding: 5px;
++    border: 2px solid grey;
++    border-radius: 10px;
++    background-color: #f3f3f3;
++  }
++
++  progress {
++    width: 90%;
++    height: 10px;
++    -webkit-appearance: none;
++    appearance: none;
++  }
++
++  p {
++	   height: 10px;
++  }
++
++  progress::-webkit-progress-bar {
++    background-color: #ffffff;
++    border-radius: 10px;
++  }
++
++  progress::-webkit-progress-value {
++    background-color: #00b5f1;
++    border-radius: 10px;
++  }
++
++  /* When complete, change the progress bar's value color */
++  .completed::-webkit-progress-value {
++    background-color: green;
++  }
++
++  .breached::-webkit-progress-value {
++    background-color: red;
++  }
++
++  progress::-moz-progress-bar {
++    background-color: lightblue;
++    border-radius: 10px;
++  }
++</style>
+\ No newline at end of file
+
+=================
+JS code on the iris backend that will send required information to Svelte components so,
+that they can be rendered
+=================
+
+diff --git a/ui/src/pages/SLA.js b/ui/src/pages/SLA.js
+index 2703e1e6..e60248a2 100644
+--- a/ui/src/pages/SLA.js
++++ b/ui/src/pages/SLA.js
+@@ -16,7 +16,12 @@ document.addEventListener('alertRendered', (event) => {
+       app = new App({
+         target: container,
+         props: {
+-          IRIStime: event.detail.IRIStime
++          IRIStime: event.detail.IRIStime,
++          alertStatusID: event.detail.alertStatusID,
++          alertSevID: event.detail.alertSevID,
++          alertCustomerID: event.detail.alertCustomerID,
++          SLA: event.detail.SLA,
++          alertID: event.detail.alertID
+         }
+       });
+       console.log('Svelte component mounted:', app);
+
+=================
+SLA bar svelte component
+=================
+
+diff --git a/ui/src/pages/SLAbar.svelte b/ui/src/pages/SLAbar.svelte
+index 21aa5ef4..815456aa 100644
+--- a/ui/src/pages/SLAbar.svelte
++++ b/ui/src/pages/SLAbar.svelte
+@@ -1,18 +1,63 @@
+ <script lang="ts">
+     import ProgressBar from "./ProgressBar.svelte";
++
++
+ 	//setting up startDateTime value
+ 	let startDateTime = "01/02/2025 14:30";//defalut value
+-    //calculate timestamp DD/MM/YYYY HH:MM of current time
+-    const now = new Date();
+-    const day = String(now.getDate()).padStart(2, '0');
+-    const month = String(now.getMonth() + 1).padStart(2, '0'); // Months are zero-based
+-    const year = now.getFullYear();
+-    const hours = String(now.getHours()).padStart(2, '0');
+-    const minutes = String(now.getMinutes()).padStart(2, '0');
+-	startDateTime = `${day}/${month}/${year} ${hours}:${minutes}`;
+-	//startDateTime = "06/02/2025 20:58";
+     export let IRIStime;
+-    console.log("IRIStimeFromSvelte: "+IRIStime);
++
++    const date = new Date(IRIStime);
++
++    date.setHours(date.getHours() + 1);
++
++    // Get day, month, year, hours, and minutes with proper padding
++    const day = String(date.getDate()).padStart(2, '0');
++    const month = String(date.getMonth() + 1).padStart(2, '0'); // Months are 0-based
++    const year = date.getFullYear();
++    const hours = String(date.getHours()).padStart(2, '0');
++    const minutes = String(date.getMinutes()).padStart(2, '0');
++
++    startDateTime = `${day}/${month}/${year} ${hours}:${minutes}`;
++
++
++    export let alertStatusID;
++    export let alertSevID;
++    export let SLA;
++    export let alertCustomerID;
++    export let alertID;
++
++
++    console.log(`MUJ START DATE TIME JE ${startDateTime}\nMUJ SLA IG TYVOLE ${SLA} MUJ ALERT ID ${alertID}`);
++
++
++    let workingDays = [];
++	let startHour = 8;
++    let endHour = 20;
++
++    //parsing SLA string
++    const clients = JSON.parse(SLA);
++    const myClient = clients.find(client => client.client_id === alertCustomerID)?.sla;
++
++    // Split the SLA into components
++    if (myClient.includes(':')) {
++  		const [days, startTime, endTime] = myClient.split(':');
++
++  		// Process working days
++  		workingDays = days.split(', ').map(day => day.trim());
++
++  		// Convert times to numbers
++  		startHour = parseInt(startTime, 10);
++  		endHour = parseInt(endTime, 10);
++	} else {
++  		// Handle case with no times (just days)
++  		workingDays = myClient.split(', ').map(day => day.trim());
++	}
++
++    const workingHours = {
++    	start: startHour, // 8:00 AM
++    	end: endHour // 8:00 PM
++  	};
++
+ 	//setting up severity
+ 	const SEVERITY ={
+ 		LOW: 12,
+@@ -20,17 +65,14 @@
+ 		MEDIUM: 6,
+ 		HIGH: 1
+   	};
+-	let severity = SEVERITY.HIGH;
++
+ 	//setting up endDateTime value
+ 	let endDateTime = "01/02/2025 22:31"; //default value
+-	endDateTime = calculateEndDateTime(startDateTime, severity);
++	endDateTime = calculateEndDateTime(startDateTime, alertSevID);
+ 	console.log("EndTimeeeee:"+endDateTime);
+-	//setting up SLA params
+-	const workingHours = {
+-    	start: 8, // 8:00 AM
+-    	end: 21 // 8:00 PM
+-  	};
+-	const workingDays = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday'];
++
++	//const workingDays = ['Monday', 'Tuesday', 'Wednesday', 'Thursday'];
++
+ 	let result;
+ 	result = getClosestWorkingTime(startDateTime);
+ 	console.log("startDateTime: "+startDateTime);
+@@ -38,29 +80,40 @@
+ 	console.log("result: "+result);
+ 	let computedValue;
+ 	if(result !== true  ){
+-		computedValue = calculateEndDateTime(result, severity);
++		computedValue = calculateEndDateTime(result, alertSevID);
+ 		console.log("computed value: "+computedValue)
+ 	}
++
+ 	//input in formated timestamp
+     //returns formated timestamp
+     function calculateEndDateTime(startDateTime, severity) {
+   		let secondsEpoch = getSecondsSinceEpoch(startDateTime);
+   		// Add the appropriate time in seconds based on severity
+-  		if (severity === SEVERITY.LOW) {
++        //1 - Medium
++        //2 - Unspecified
++        //3 - Informational
++        //4 - Low
++        //5 - High
++        //6 - Critical
++  		if (severity === 4) { //Low
+     		secondsEpoch += SEVERITY.LOW * 3600;
+   		}
+-		else if (severity === SEVERITY.INFORMATIONAL) {
++		else if (severity === 3) {
+     		secondsEpoch += 24 * 3600;
+   		}
+-		else if (severity === SEVERITY.MEDIUM) {
++		else if (severity === 1) { //medium
+     		secondsEpoch += SEVERITY.MEDIUM * 3600;
+   		}
+-		else if (severity === SEVERITY.HIGH) {
+-    		secondsEpoch = secondsEpoch+1200;
++		else if (severity === 5) {
++    		secondsEpoch = secondsEpoch+600;
+   		}
++        else {
++            secondsEpoch += 12 * 3600;
++        }
+   		// Return the formatted date-time string
+   		return getFormattedDateFromTimestamp(secondsEpoch);
+ 	}
++
+     //inputs formated timestamp
+     //returns num of seconds
+     function getSecondsSinceEpoch(dateString) {
+@@ -76,28 +129,31 @@
+         const secondsSinceEpoch = Math.floor(date.getTime() / 1000);
+         return secondsSinceEpoch;
+     }
++
+ 	//input num of seconds
+     //returns formated timestamp
+     function getFormattedDateFromTimestamp(timestamp) {
+-    // Create a Date object from the timestamp (multiply by 1000 to convert seconds to milliseconds)
+-    const date = new Date(timestamp * 1000);
+-    // Extract day, month, year, hours, and minutes
+-    const day = String(date.getDate()).padStart(2, '0'); // Ensure 2 digits
+-    const month = String(date.getMonth() + 1).padStart(2, '0'); // Months are 0-based
+-    const year = date.getFullYear();
+-    const hours = String(date.getHours()).padStart(2, '0'); // Ensure 2 digits
+-    const minutes = String(date.getMinutes()).padStart(2, '0'); // Ensure 2 digits
+-    // Format the date and time as DD/MM/YYYY HH:MM
+-    const formattedDate = `${day}/${month}/${year} ${hours}:${minutes}`;
+-    return formattedDate;
+-}
++        // Create a Date object from the timestamp (multiply by 1000 to convert seconds to milliseconds)
++        const date = new Date(timestamp * 1000);
++        // Extract day, month, year, hours, and minutes
++        const day = String(date.getDate()).padStart(2, '0'); // Ensure 2 digits
++        const month = String(date.getMonth() + 1).padStart(2, '0'); // Months are 0-based
++        const year = date.getFullYear();
++        const hours = String(date.getHours()).padStart(2, '0'); // Ensure 2 digits
++        const minutes = String(date.getMinutes()).padStart(2, '0'); // Ensure 2 digits
++        // Format the date and time as DD/MM/YYYY HH:MM
++        const formattedDate = `${day}/${month}/${year} ${hours}:${minutes}`;
++        return formattedDate;
++    }
++
+     //converts the formated timestamp to Date object - easier to work with
+ 	function parseDateTime(dateTime) {
+     	const [date, time] = dateTime.split(' ');
+     	const [day, month, year] = date.split('/').map(Number);
+     	const [hours, minutes] = time.split(':').map(Number);
+-   	 return new Date(year, month - 1, day, hours, minutes);
+-  }
++   	    return new Date(year, month - 1, day, hours, minutes);
++    }
++
+     //inputs Date object and
+     // returns formated timestamp string
+     //if not Date object inputted return true - indicates we are in current working hours
+@@ -112,6 +168,7 @@
+     	const minutes = String(date.getMinutes()).padStart(2, '0');
+     	return `${day}/${month}/${year} ${hours}:${minutes}`;
+   	}
++
+     // Check if it's a working day and within working hours - if yes return true else return next working time
+     function getClosestWorkingTime(inputDateTime) {
+     	const inputDate = parseDateTime(inputDateTime);
+@@ -158,16 +215,9 @@
+ </script>
+ 
+ <div class="grid-gap">
+-	<main>
+-  <p>Input Date and Time: {startDateTime}</p>
+   {#if result === true} <!-- if within working hours -->
+-    <p>The provided time is within working hours.</p>
+-	  <ProgressBar startDateTime={startDateTime} {endDateTime}/>
++	  <ProgressBar startDateTime={startDateTime} {endDateTime} {alertStatusID} {alertID}/>
+   {:else} <!-- if not within working hours - recompute endDateTime-->
+-    <p>The closest working time is: {result}</p>
+-	  <ProgressBar startDateTime={result} endDateTime={computedValue}/>
++	  <ProgressBar startDateTime={result} endDateTime={computedValue} {alertStatusID} {alertID}/>
+   {/if}
+-</main>
+-
+-
+ </div>
+\ No newline at end of file
+
+=================
+SLAcontainer component (written in Svelte as mentioned earlier)
+=================
+
+diff --git a/ui/src/pages/SLAcontainer.svelte b/ui/src/pages/SLAcontainer.svelte
+index fbd7a73a..e818437a 100644
+--- a/ui/src/pages/SLAcontainer.svelte
++++ b/ui/src/pages/SLAcontainer.svelte
+@@ -2,10 +2,17 @@
+ 	import SLAbar from "./SLAbar.svelte";
+     let isVisible = true;
+ 	export let IRIStime;
++	export let alertStatusID;
++	export let alertSevID;
++	export let alertCustomerID;
++	export let SLA;
++	export let alertID;
++
++
+ </script>
+ 
+ <div class="grid-gap">
+ 		<div style:display={isVisible ? 'block' : 'none'}>
+-			<SLAbar {IRIStime}/>
++			<SLAbar {IRIStime} {alertStatusID} {alertSevID} {SLA} {alertCustomerID} {alertID}/>
+ 		</div>
+ </div>
+\ No newline at end of file
+
+=================
+modifying alerts.js HTML code with SLAcontainer div so that Svelte code
+can be injected into the DOM
+=================
+
+diff --git a/ui/src/pages/alerts.js b/ui/src/pages/alerts.js
+index 96fbd09f..7d3c1bb5 100644
+--- a/ui/src/pages/alerts.js
++++ b/ui/src/pages/alerts.js
+@@ -1037,6 +1037,14 @@ function renderAlert(alert, expanded=false, modulesOptionsAlertReq,
+                       </div>` : ''}
+                     
+                     <div class="separator-solid"></div>
++                    
++                    <h3 class="title mt-3 mb-3"><strong>SLA</strong></h3>
++                    <div class="container">
++                        <div class="SLAcontainer"></div>
++                    </div>
++                    
++                     <div class="separator-solid"></div>
++                    
+                     <h3 class="title mb-3"><strong>Alert note</strong></h3>
+                     <pre id=alertNote-${alert.alert_id}>${alert.alert_note}</pre>
+                     
+@@ -1215,10 +1223,6 @@ function renderAlert(alert, expanded=false, modulesOptionsAlertReq,
+                            </div>`
+               : ""
+       }
+-                    <h3 class="title mt-3 mb-3"><strong>SLA</strong></h3>
+-                    <div class="container" style="display: flex;justify-content: center;">
+-                        <div class="SLAcontainer"></div>
+-                    </div>
+                     
+                     </div>
+                   </div>
+@@ -1311,6 +1315,7 @@ async function refreshAlert(alertId, alertData, expanded=false) {
+         }
+         alertData = alertDataReq.data;
+     }
++    const SLAdata = await fetchSLAdata();
+ 
+       if (modulesOptionsAlertReq === null) {
+     modulesOptionsAlertReq = await fetchModulesOptionsAlert();
+@@ -1328,8 +1333,49 @@ async function refreshAlert(alertId, alertData, expanded=false) {
+     const alertElement = $(`#alertCard-${alertId}`);
+     const alertHtml = renderAlert(alertData, expanded, modulesOptionsAlertReq.data, modulesOptionsIocReq.data);
+     alertElement.replaceWith(alertHtml);
++
++    //const SLAelement = $(`#SLAelement`).text();
++    console.log("SLA ELEMENT IS HERE! ");
++    console.log(alertData.alert_customer_id);
++    //document.dispatchEvent(new CustomEvent('alertRendered', { detail: { IRIStime: alertData.alert_creation_time, alertStatusID: alertData.alert_status_id }}));
++
++    document.dispatchEvent(new CustomEvent('alertRendered', {
++        detail: {
++            IRIStime: alertData.alert_creation_time,
++            alertStatusID: alertData.alert_status_id,
++            alertSevID: alertData.severity.severity_id,
++            alertCustomerID: alertData.alert_customer_id,
++            SLA: SLAdata,
++            alertID: alertData.alert_id
++        }
++    }));
++
++
+ }
+ 
++async function fetchSLAdata() {
++
++    try {
++        const response = await fetch('alerts/api/get_clients_sla_api');
++        const data = await response.json();
++
++        // Declare the variable properly
++        const customersSla = data.data.customers_sla;
++        console.log('Customers SLA:', customersSla);
++
++        // Convert the entire array to a single JSON string
++        const jsonString = JSON.stringify(customersSla);
++        console.log("JSON string:", jsonString);
++
++        return jsonString;
++    } catch (error) {
++        console.error('Error fetching data:', error);
++        throw error; // Optionally re-throw the error after logging it
++    }
++
++    }
++
++
+ async function fetchModulesOptionsAlert() {
+     const response = get_request_api('/dim/hooks/options/alert/list');
+ 
+@@ -1383,6 +1429,10 @@ async function updateAlerts(page, per_page, filters = {}, paging=false){
+     }
+   }
+ 
++
++  const SLAdata = await fetchSLAdata();
++
++
+   // Check if the selection mode is active
+    const selectionModeActive = $('body').hasClass('selection-mode');
+    selectionModeActive ? $('body').removeClass('selection-mode') : '';
+@@ -1409,9 +1459,19 @@ async function updateAlerts(page, per_page, filters = {}, paging=false){
+                                                modulesOptionsIocReq.data);
+           alertElement.html(alertHtml);
+           alertsContainer.append(alertElement);
+-          console.log("alert Tile: "+alert.alert_source_event_time);
+-            // Dispatch a custom event when done:
+-            document.dispatchEvent(new CustomEvent('alertRendered', { detail: { IRIStime: alert.alert_source_event_time }}));
++          console.log(alert);
++          const jsonString = "";
++
++          document.dispatchEvent(new CustomEvent('alertRendered', {
++                detail: {
++                    IRIStime: alert.alert_creation_time,
++                    alertStatusID: alert.alert_status_id,
++                    alertSevID: alert.severity.severity_id,
++                    alertCustomerID: alert.alert_customer_id,
++                    SLA: SLAdata,
++                    alertID: alert.alert_id
++                }
++          }));
+       });
+   }
+ 
+
+=================
+use of local storage for passing data to back-end
+=================
+
+diff --git a/ui/src/pages/persistentStore.js b/ui/src/pages/persistentStore.js
+new file mode 100644
+index 00000000..41c85483
+--- /dev/null
++++ b/ui/src/pages/persistentStore.js
+@@ -0,0 +1,15 @@
++import { writable } from 'svelte/store';
++
++export function createPersistentStore(key, initialValue) {
++  // Try to read from localStorage; if none exists, use the initial value
++  const storedValue = localStorage.getItem(key);
++  const data = storedValue ? JSON.parse(storedValue) : initialValue;
++  const store = writable(data);
++
++  // Subscribe to store changes and write to localStorage
++  store.subscribe(value => {
++    localStorage.setItem(key, JSON.stringify(value));
++  });
++
++  return store;
++}
